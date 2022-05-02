@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "640994654508",
+    "project_id": "starvation-addword",
+    "storage_bucket": "starvation-addword.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:640994654508:android:d0bca36bfccd86bfbb1489",
+        "android_client_info": {
+          "package_name": "com.starvation.app_word"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "640994654508-vr2epd1jhq2egjlhr41d5rjgn2qn8p3h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlBy5U6ukw8G-ByBKX7bUlQt4Hdnro3eQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "640994654508-vr2epd1jhq2egjlhr41d5rjgn2qn8p3h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
