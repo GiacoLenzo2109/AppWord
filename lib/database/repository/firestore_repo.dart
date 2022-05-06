@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:app_word/database/entity/user.dart';
 import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/entity/wordbook.dart';
 import 'package:app_word/database/firebase_global.dart';
@@ -8,6 +9,23 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreRepository {
   static const String personalWordsBook = "Personal";
   static const String classWordsBook = "Classroom";
+
+  //USERS
+  static Future<bool> signUp(
+      String name, String surname, String email, String password) async {
+    log("1_ SignUp iniziata");
+    await FirebaseGlobal.auth
+        .createUserWithEmailAndPassword(email: email, password: password);
+    log("2_ Account creato");
+    if (FirebaseGlobal.auth.currentUser != null) {
+      await FirebaseGlobal.auth.currentUser!.sendEmailVerification();
+      FirebaseGlobal.users
+          .doc(FirebaseGlobal.auth.currentUser!.uid)
+          .set(User(name, surname).toMap())
+          .whenComplete(() => true);
+    }
+    return false;
+  }
 
   //WORDS-BOOK
   // static Future<void> createPersonalWordBook() async {

@@ -25,10 +25,10 @@ class Word {
   Timestamp? timestamp;
 
   static const DEFINITION = "definition";
-  String? definition;
+  List<String>? definitions;
 
   static const SEMANTIC_FIELD = "semantic_field";
-  String? semanticField;
+  List<String>? semanticFields;
 
   static const EXAMPLE_PHRASES = "example_phrases";
   List<String>? examplePhrases;
@@ -57,8 +57,8 @@ class Word {
   Word(
       {String? type,
       String? word,
-      String? definition,
-      String? semanticField,
+      List<String>? definition,
+      List<String>? semanticField,
       List<String>? examplePhrases,
       String? italianType,
       String? italianCorrespondence,
@@ -70,8 +70,8 @@ class Word {
       : type = type ?? "Verbo",
         word = word ?? "",
         timestamp = Timestamp.now(),
-        definition = definition = definition ?? "",
-        semanticField = semanticField ?? "",
+        definitions = definition ?? [],
+        semanticFields = semanticField ?? [],
         examplePhrases = examplePhrases ?? [],
         italianType = italianType ?? "Italiano moderno",
         italianCorrespondence = italianCorrespondence ?? "",
@@ -85,8 +85,8 @@ class Word {
   String toString() {
     return "Type: $type \n" +
         "Word: $word \n" +
-        "Definition: $definition \n" +
-        "Semantic Filed: $semanticField \n" +
+        "Definition: $definitions \n" +
+        "Semantic Filed: $semanticFields \n" +
         "Phrases: $examplePhrases \n" +
         "Syn: $synonyms \n" +
         "Con: $antonyms \n" +
@@ -116,9 +116,8 @@ class Word {
       TYPE: type == null ? type : type!.toLowerCase(),
       WORD: word == null ? word : word!.toLowerCase(),
       TIMESTAMP: timestamp,
-      DEFINITION: definition == null ? definition : definition!.toLowerCase(),
-      SEMANTIC_FIELD:
-          semanticField == null ? semanticField : semanticField!.toLowerCase(),
+      DEFINITION: definitions,
+      SEMANTIC_FIELD: semanticFields,
       EXAMPLE_PHRASES: examplePhrases,
       SYNONYMS: synonyms,
       ANTONYMS: antonyms,
@@ -138,8 +137,8 @@ class Word {
       : type = snapshot[TYPE],
         word = snapshot[WORD],
         timestamp = snapshot[TIMESTAMP],
-        definition = snapshot[DEFINITION],
-        semanticField = snapshot[SEMANTIC_FIELD],
+        definitions = List<String>.from(snapshot[DEFINITION]),
+        semanticFields = List<String>.from(snapshot[SEMANTIC_FIELD]),
         examplePhrases = List<String>.from(snapshot[EXAMPLE_PHRASES]),
         synonyms = List<String>.from(snapshot[SYNONYMS]),
         antonyms = List<String>.from(snapshot[ANTONYMS]),

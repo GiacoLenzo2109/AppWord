@@ -51,30 +51,6 @@ class _HomePage extends State<HomePage> {
     // });
   }
 
-  Future<bool> fetchData() async {
-    if (FirebaseGlobal.auth.currentUser != null) {
-      var word = await FirestoreRepository.getDailyWord();
-      if (word.docs.isNotEmpty) {
-        dailyWord =
-            Word.fromSnapshot(word.docs.first.data() as Map<String, dynamic>);
-      } else {
-        dailyWord = null;
-      }
-
-      var words = await FirestoreRepository.getAllWords(
-          FirestoreRepository.classWordsBook);
-
-      if (words != null && words.docs.isNotEmpty) {
-        for (var item in words.docs) {
-          Word word = Word.fromSnapshot(item.data() as Map<String, dynamic>);
-          newWords.putIfAbsent(word.word!, () => word);
-        }
-        return true;
-      }
-    }
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -610,13 +586,39 @@ class _HomePage extends State<HomePage> {
       );
     }
 
-    Widget buildHome() {
-      return FutureBuilder(
-        future: FirebaseGlobal.auth.currentUser != null ? fetchData() : null,
-        builder: (context, snapshot) =>
-            snapshot.hasData ? buildHomeLoaded() : buildHomeLoading(),
-      );
+    Future<bool> fetchData() async {
+      if (FirebaseGlobal.auth.currentUser != null) {
+        await FirestoreRepository.getDailyWord().then((word) async {
+          if (word.docs.isNotEmpty) {
+            dailyWord = Word.fromSnapshot(
+                word.docs.first.data() as Map<String, dynamic>);
+          } else {
+            dailyWord = null;
+          }
+
+          var words = await FirestoreRepository.getAllWords(
+              FirestoreRepository.classWordsBook);
+
+          if (words != null && words.docs.isNotEmpty) {
+            for (var item in words.docs) {
+              Word word =
+                  Word.fromSnapshot(item.data() as Map<String, dynamic>);
+              newWords.putIfAbsent(word.word!, () => word);
+            }
+          }
+          loaded = true;
+          return true;
+        });
+      }
+      return false;
     }
+
+    Widget buildHome() => FutureBuilder(
+          future: fetchData().then((value) => value),
+          builder: (context, snapshot) {
+            return loaded ? buildHomeLoaded() : buildHomeLoading();
+          },
+        );
 
     Widget buildVoidHome() {
       return Padding(
@@ -649,15 +651,16 @@ class _HomePage extends State<HomePage> {
     }
 
     return FutureBuilder(
-        future: checkBooks(),
-        builder: (context, snapshot) {
-          if (snapshot.data == true) {
-            return buildHome();
-          } else if (snapshot.data == false) {
-            return buildVoidHome();
-          }
-          return const CircularProgressIndicator();
-        });
+      future: checkBooks(),
+      builder: (context, snapshot) {
+        if (snapshot.data == true) {
+          return buildHome();
+        } else if (snapshot.data == false) {
+          return buildVoidHome();
+        }
+        return const SizedBox();
+      },
+    );
   }
 
   Widget _buildTile(Widget child, {double? round, Function()? onTap}) {

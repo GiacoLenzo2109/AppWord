@@ -6,6 +6,8 @@ import 'package:app_word/res/custom_colors.dart';
 import 'package:app_word/res/global.dart';
 import 'package:app_word/res/theme_class.dart';
 import 'package:app_word/ui/screens/email_verification_page.dart';
+import 'package:app_word/ui/widgets/error_dialog_widget.dart';
+import 'package:app_word/ui/widgets/loading_widget.dart';
 import 'package:app_word/ui/widgets/text_input_field.dart';
 import 'package:app_word/ui/widgets/wave_widget.dart';
 import 'package:app_word/viewmodel/sign_in_model.dart';
@@ -31,7 +33,6 @@ class _SignInPage extends State<SignInPage> {
     final bool keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     final model = Provider.of<SignInModel>(context);
 
-    bool checkError = false;
     String error = "";
 
     void logIn(String email, String password) async {
@@ -39,6 +40,7 @@ class _SignInPage extends State<SignInPage> {
         await FirebaseGlobal.auth
             .signInWithEmailAndPassword(email: email, password: password);
         if (FirebaseGlobal.auth.currentUser != null) {
+          Navigator.pop(context);
           if (FirebaseGlobal.auth.currentUser!.emailVerified) {
             Navigator.pushNamedAndRemoveUntil(context, "/", (route) => false);
           } else {
@@ -55,29 +57,27 @@ class _SignInPage extends State<SignInPage> {
         }
       } on FirebaseAuthException catch (e) {
         log(e.code);
+        Navigator.pop(context);
         if (e.code == 'user-not-found') {
-          checkError = true;
           error = 'Email o password sbagliati!';
         } else if (e.code == 'wrong-password') {
-          checkError = true;
           error = 'Password sbagliata, riprova!';
         }
+        showCupertinoDialog(
+            context: context, builder: (context) => ErrorDialogWidget(error));
       } catch (e) {
         log(e.toString());
       }
     }
 
-    void signUp(String email, String password) async {
+    void signUp(
+        String name, String surname, String email, String password) async {
       try {
         if (checkPassword) {
-          log("1_ SignUp iniziata");
-          await FirebaseGlobal.auth
-              .createUserWithEmailAndPassword(email: email, password: password);
-          log("2_ Account creato");
-          if (FirebaseGlobal.auth.currentUser != null) {
-            await FirebaseGlobal.auth.currentUser!.sendEmailVerification();
-
-            log("3_ Email inviata");
+          bool check =
+              await FirestoreRepository.signUp(name, surname, email, password);
+          if (check) {
+            Navigator.pop(context);
             Navigator.push(
                 context,
                 CupertinoPageRoute(
@@ -85,22 +85,39 @@ class _SignInPage extends State<SignInPage> {
                         create: (context) => model,
                         builder: (context, _) =>
                             const EmailVerificationPage())));
-          } else {
-            error = "Le password non corrispondono!";
-            checkError = true;
           }
+        } else {
+          Navigator.pop(context);
+          error = "Le password non corrispondono!";
+          showCupertinoDialog(
+              context: context, builder: (context) => ErrorDialogWidget(error));
         }
       } on FirebaseAuthException catch (e) {
+        Navigator.pop(context);
         if (e.code == 'weak-password') {
-          checkError = true;
           error = 'La password è troppo debole!';
         } else if (e.code == 'email-already-in-use') {
-          checkError = true;
           error = 'Mail già utilizzata!';
         }
+        showCupertinoDialog(
+            context: context, builder: (context) => ErrorDialogWidget(error));
       } catch (e) {
         log(e.toString());
       }
+    }
+
+    CupertinoTextField buildCupertinoTextField(
+        String placeholder, Function(String) onChanged) {
+      return CupertinoTextField(
+        placeholder: placeholder,
+        style: const TextStyle(fontSize: 15),
+        obscureText: false,
+        keyboardType: TextInputType.name,
+        prefix: const Padding(
+            padding: Global.padding, child: Icon(CupertinoIcons.person)),
+        padding: Global.padding,
+        onChanged: onChanged,
+      );
     }
 
     CupertinoTextField buildCupertinoTextFieldEmail() {
@@ -143,16 +160,6 @@ class _SignInPage extends State<SignInPage> {
         padding: Global.padding,
         onChanged: (value) => setState(() => onChanged!(value)),
       );
-    }
-
-    if (FirebaseGlobal.auth.currentUser != null &&
-        !FirebaseGlobal.auth.currentUser!.emailVerified) {
-      Navigator.push(
-          context,
-          CupertinoPageRoute(
-              builder: (context) => ChangeNotifierProvider(
-                  create: (context) => model,
-                  builder: (context, _) => const EmailVerificationPage())));
     }
 
     return CupertinoPageScaffold(
@@ -200,6 +207,18 @@ class _SignInPage extends State<SignInPage> {
                   ),
                 ),
                 const SizedBox(height: 35.0),
+                Visibility(
+                  visible: !model.isLogin,
+                  child: buildCupertinoTextField(
+                      "Nome", (name) => model.name = name),
+                ),
+                const SizedBox(height: 10.0),
+                Visibility(
+                  visible: !model.isLogin,
+                  child: buildCupertinoTextField(
+                      "Cognome", (surname) => model.surname = surname),
+                ),
+                const SizedBox(height: 10.0),
                 buildCupertinoTextFieldEmail(),
                 const SizedBox(height: 10.0),
                 buildCupertinoTextFieldPassword(
@@ -209,16 +228,14 @@ class _SignInPage extends State<SignInPage> {
                     CupertinoIcons.eye_fill,
                     CupertinoIcons.eye_slash_fill, (value) {
                   model.password = value;
-                  if (checkError) checkError = false;
                 }),
                 const SizedBox(height: 10.0),
 
                 //SignUp
                 Column(
                   children: [
-                    AnimatedScale(
-                      duration: const Duration(milliseconds: 250),
-                      scale: model.isLogin ? 0 : 1,
+                    Visibility(
+                      visible: !model.isLogin,
                       child: buildCupertinoTextFieldPassword(
                           "Confirm Password",
                           1,
@@ -229,9 +246,6 @@ class _SignInPage extends State<SignInPage> {
                                 model.password == value
                                     ? checkPassword = true
                                     : checkPassword = false,
-                                setState(() {
-                                  if (checkError) checkError = false;
-                                }),
                               }),
                     ),
                     const SizedBox(height: 10.0),
@@ -256,14 +270,6 @@ class _SignInPage extends State<SignInPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    Visibility(
-                        visible: checkError,
-                        child: Text(
-                          error,
-                          style:
-                              const TextStyle(color: CupertinoColors.systemRed),
-                        )),
                     const SizedBox(height: 35.0),
                     ElevatedButton(
                       style: ButtonStyle(
@@ -280,13 +286,24 @@ class _SignInPage extends State<SignInPage> {
                             MaterialStateProperty.all(Size(size.width, 65)),
                       ),
                       onPressed: () {
-                        log("Email: " +
-                            model.email +
-                            " Password: " +
-                            model.password);
-                        model.isLogin
-                            ? logIn(model.email, model.password)
-                            : signUp(model.email, model.password);
+                        if (model.email.isEmpty || model.password.isEmpty) {
+                          showCupertinoDialog(
+                              context: context,
+                              builder: (context) => const ErrorDialogWidget(
+                                  "Compilare tutti i campi"));
+                        } else {
+                          showCupertinoDialog(
+                              context: context,
+                              builder: (context) => const LoadingWidget());
+                          log("Email: " +
+                              model.email +
+                              " Password: " +
+                              model.password);
+                          model.isLogin
+                              ? logIn(model.email, model.password)
+                              : signUp(model.name, model.surname, model.email,
+                                  model.password);
+                        }
                       },
                       child: Text(
                         model.isLogin ? "Login" : "SignUp",

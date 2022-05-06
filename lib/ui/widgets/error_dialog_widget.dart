@@ -13,9 +13,13 @@ class ErrorDialogWidget extends StatefulWidget {
 
 class _ErrorDialogWidgetState extends State<ErrorDialogWidget> {
   @override
-  Widget build(BuildContext context) {
+  void initState() {
     Future.delayed(const Duration(seconds: 3), () => Navigator.pop(context));
+    super.initState();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: Global.padding,
       child: Center(

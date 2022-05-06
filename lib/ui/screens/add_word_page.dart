@@ -48,12 +48,18 @@ class _AddWordPageState extends State<AddWordPage> {
     return list;
   }
 
-  late TextfieldTagsController synController, antController, phraseController;
+  late TextfieldTagsController synController,
+      antController,
+      phraseController,
+      definitionController,
+      semanticFieldController;
 
   Word word = Word();
 
   @override
   void initState() {
+    definitionController = TextfieldTagsController();
+    semanticFieldController = TextfieldTagsController();
     synController = TextfieldTagsController();
     antController = TextfieldTagsController();
     phraseController = TextfieldTagsController();
@@ -233,18 +239,18 @@ class _AddWordPageState extends State<AddWordPage> {
                       ],
                     ),
                   ),
-                  Global.buildCupertinoTextField(
-                      "Definizione",
+                  Global.buildTextFieldTags(
+                      "Definizione già inserita",
+                      "Inserisci definizione",
                       null,
-                      CupertinoIcons.text_justify,
-                      (value) => word.definition = value),
-                  Visibility(
-                    child: Global.buildCupertinoTextField(
-                        "Campo semantico",
-                        1,
-                        CupertinoIcons.textbox,
-                        (value) => word.semanticField = value),
-                  ),
+                      definitionController,
+                      CupertinoIcons.text_justify),
+                  Global.buildTextFieldTags(
+                      "Campo semantico già inserito",
+                      "Inserisci campo semantico",
+                      null,
+                      semanticFieldController,
+                      CupertinoIcons.textbox),
                   Global.buildTextFieldTags(
                     "Frase già inserita!",
                     "Inserire una frase",
@@ -315,13 +321,13 @@ class _AddWordPageState extends State<AddWordPage> {
                             builder: (context) => const ErrorDialogWidget(
                                 "Inserire il vocabolo!"),
                           );
-                        } else if (word.definition!.isEmpty) {
+                        } else if (word.definitions!.isEmpty) {
                           showCupertinoDialog(
                             context: context,
                             builder: (context) => const ErrorDialogWidget(
                                 "Inserire la definizione!"),
                           );
-                        } else if (word.semanticField!.isEmpty) {
+                        } else if (word.semanticFields!.isEmpty) {
                           showCupertinoDialog(
                             context: context,
                             builder: (context) => const ErrorDialogWidget(
@@ -331,6 +337,16 @@ class _AddWordPageState extends State<AddWordPage> {
                           showCupertinoDialog(
                               context: context,
                               builder: (context) => const LoadingWidget());
+                          if (definitionController.getTags != null) {
+                            for (var def in definitionController.getTags!) {
+                              word.definitions!.add(def);
+                            }
+                          }
+                          if (semanticFieldController.getTags != null) {
+                            for (var sem in semanticFieldController.getTags!) {
+                              word.semanticFields!.add(sem);
+                            }
+                          }
                           if (phraseController.getTags != null) {
                             for (var phrase in phraseController.getTags!) {
                               word.examplePhrases!.add(phrase);

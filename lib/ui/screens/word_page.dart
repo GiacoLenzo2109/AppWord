@@ -76,15 +76,103 @@ class _WordPageState extends State<WordPage> {
                             fontStyle: FontStyle.italic),
                       ),
                     ),
-                    Global.buildCupertinoTextWithTitle(
+                    Global.buildNeumorphicTile(
                       context,
-                      "Definizione",
-                      widget.word.definition!,
+                      StaggeredGrid.count(
+                        crossAxisCount: 1,
+                        children: [
+                          Text(
+                            "Definizione:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                              color: CupertinoTheme.of(context)
+                                  .primaryContrastingColor,
+                            ),
+                          ),
+                          SizedBox(
+                            width: Global.getSize(context).width,
+                            height: (widget.word.definitions!.length * 23)
+                                .toDouble(),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(0),
+                              itemExtent: 23,
+                              itemCount: widget.word.definitions!.length,
+                              itemBuilder: (context, index) => Row(
+                                children: [
+                                  Text(
+                                    (index + 1).toString() + ". ",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: CupertinoTheme.of(context)
+                                          .primaryContrastingColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    '"' +
+                                        widget.word.definitions!
+                                            .elementAt(index) +
+                                        '"',
+                                    style: TextStyle(
+                                      color: CupertinoTheme.of(context)
+                                          .primaryContrastingColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    Global.buildCupertinoTextWithTitle(
+                    Global.buildNeumorphicTile(
                       context,
-                      "Campo semantico",
-                      widget.word.semanticField!,
+                      StaggeredGrid.count(
+                        crossAxisCount: 1,
+                        children: [
+                          Text(
+                            "Campo semantico:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                              color: CupertinoTheme.of(context)
+                                  .primaryContrastingColor,
+                            ),
+                          ),
+                          SizedBox(
+                            width: Global.getSize(context).width,
+                            height: (widget.word.semanticFields!.length * 23)
+                                .toDouble(),
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(0),
+                              itemExtent: 23,
+                              itemCount: widget.word.semanticFields!.length,
+                              itemBuilder: (context, index) => Row(
+                                children: [
+                                  Text(
+                                    (index + 1).toString() + ". ",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: CupertinoTheme.of(context)
+                                          .primaryContrastingColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    '"' +
+                                        widget.word.semanticFields!
+                                            .elementAt(index) +
+                                        '"',
+                                    style: TextStyle(
+                                      color: CupertinoTheme.of(context)
+                                          .primaryContrastingColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     Visibility(
                       visible: widget.word.examplePhrases!.isNotEmpty,

@@ -120,6 +120,7 @@ class _SearchPageState extends State<SearchPage> {
                     ),
                   ).whenComplete(() async {
                     if (searchFilterModel.search) {
+                      words.clear();
                       await FirestoreRepository.getWords(
                               FirestoreRepository.classWordsBook,
                               null,

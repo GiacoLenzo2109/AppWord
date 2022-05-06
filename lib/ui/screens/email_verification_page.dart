@@ -5,6 +5,7 @@ import 'package:app_word/database/firebase_global.dart';
 import 'package:app_word/res/custom_colors.dart';
 import 'package:app_word/res/global.dart';
 import 'package:app_word/ui/screens/signin_page.dart';
+import 'package:app_word/ui/widgets/error_dialog_widget.dart';
 import 'package:app_word/viewmodel/sign_in_model.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -28,15 +29,18 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     model = Provider.of<SignInModel>(context);
 
     void reloadUser() async {
-      FirebaseGlobal.auth.currentUser!.reload().whenComplete(() => model
+      await FirebaseGlobal.auth.currentUser!.reload().whenComplete(() => model
           .setVerifiedEmail(FirebaseGlobal.auth.currentUser!.emailVerified));
+
       log("Email verificata: " + model.isEmailVerified.toString());
     }
 
-    Timer.periodic(const Duration(milliseconds: 500), (timer) async {
-      reloadUser();
-      if (model.isEmailVerified) timer.cancel();
-    });
+    // Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+    //   if (FirebaseGlobal.auth.currentUser != null) {
+    //     reloadUser();
+    //     if (model.isEmailVerified) timer.cancel();
+    //   }
+    // });
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -81,16 +85,22 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         onPressed: () => FirebaseGlobal.auth.currentUser!
                             .sendEmailVerification()),
                   ],
-                )
+                ),
+                CupertinoButton(
+                    child: const Text("Vai alla registrazione"),
+                    onPressed: () async {
+                      await FirebaseGlobal.auth.signOut();
+                      model.dispose();
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, SignInPage.route, (route) => false);
+                    }),
               ],
             ),
             Row(
               children: [
                 Expanded(
                   child: CupertinoButton(
-                      color: !model.isEmailVerified
-                          ? CupertinoColors.systemGrey3
-                          : CupertinoColors.activeGreen,
+                      color: CupertinoColors.activeGreen,
                       pressedOpacity: 0.75,
                       child: const Text(
                         "Fatto",
@@ -100,11 +110,17 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                             fontSize: 18),
                       ),
                       onPressed: () async {
-                        !model.isEmailVerified
-                            ? await FirebaseGlobal.auth.currentUser!
-                                .sendEmailVerification()
-                            : Navigator.pushNamedAndRemoveUntil(
-                                context, "/", (route) => false);
+                        reloadUser();
+                        await FirebaseGlobal.auth.currentUser!.reload();
+                        if (!FirebaseGlobal.auth.currentUser!.emailVerified) {
+                          showCupertinoDialog(
+                              context: context,
+                              builder: (context) => const ErrorDialogWidget(
+                                  "Email non verificata!"));
+                        } else {
+                          Navigator.pushNamedAndRemoveUntil(
+                              context, "/", (route) => false);
+                        }
                       }),
                 ),
               ],

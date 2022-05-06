@@ -12,18 +12,11 @@ class LoadingWidget extends StatefulWidget {
 class _LoadingWidgetState extends State<LoadingWidget> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(Global.getSize(context).width / 5),
-      child: Container(
-        width: 60,
-        height: 60,
-        padding: Global.padding,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: CupertinoTheme.of(context).scaffoldBackgroundColor,
-        ),
-        child: Lottie.asset("assets/loading.json", height: 10),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
       ),
+      child: Lottie.asset("assets/loading.json", height: 10),
     );
   }
 }

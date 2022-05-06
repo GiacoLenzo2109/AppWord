@@ -13,7 +13,25 @@ class SignInModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  get email => _email;
+  get name => _name;
+
+  String _name = "";
+
+  set name(value) {
+    _name = value;
+    notifyListeners();
+  }
+
+  get surname => _surname;
+
+  String _surname = "";
+
+  set surname(value) {
+    _surname = value;
+    notifyListeners();
+  }
+
+  String get email => _email;
 
   String _email = "";
 
@@ -22,7 +40,7 @@ class SignInModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  get password => _password;
+  String get password => _password;
 
   String _password = "";
 

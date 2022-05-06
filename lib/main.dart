@@ -36,9 +36,13 @@ class MyApp extends StatelessWidget {
         initialRoute: "/",
         routes: {
           SplashScreen.route: (context) => const SplashScreen(),
-          "/": (context) => FirebaseGlobal.auth.currentUser != null &&
-                  FirebaseGlobal.auth.currentUser!.emailVerified
-              ? const MainBottomClass()
+          "/": (context) => FirebaseGlobal.auth.currentUser != null
+              ? FirebaseGlobal.auth.currentUser!.emailVerified
+                  ? const MainBottomClass()
+                  : ChangeNotifierProvider(
+                      create: (context) => SignInModel(),
+                      builder: (context, _) => const EmailVerificationPage(),
+                    )
               : ChangeNotifierProvider(
                   create: (_) => SignInModel(),
                   builder: (context, _) => const SignInPage(),

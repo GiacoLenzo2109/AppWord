@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:app_word/database/entity/word.dart';
-import 'package:app_word/database/entity/word_verb.dart';
 import 'package:app_word/database/firebase_global.dart';
 import 'package:app_word/database/repository/firestore_repo.dart';
 import 'package:app_word/res/global.dart';

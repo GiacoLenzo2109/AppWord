@@ -20,19 +20,72 @@ class _JoinBookDialog extends State<JoinBookDialog> {
   String pin_3 = "";
   String pin_4 = "";
 
-  Widget buildInputField(Function(String) onChanged) {
-    return CupertinoTextField(
-      textAlign: TextAlign.center,
-      padding: const EdgeInsets.all(15),
-      maxLines: 1,
-      expands: false,
-      onChanged: onChanged,
-      maxLength: 1,
+  Map<int, bool> pins = {};
+  Map<int, FocusNode> focusNodes = {};
+
+  @override
+  void initState() {
+    pins.putIfAbsent(0, () => true);
+    pins.putIfAbsent(1, () => false);
+    pins.putIfAbsent(2, () => false);
+    pins.putIfAbsent(3, () => false);
+
+    for (var n in pins.keys) {
+      focusNodes.putIfAbsent(n, () => FocusNode());
+    }
+
+    Future.delayed(
+      const Duration(milliseconds: 0),
+      () => FocusScope.of(context).requestFocus(focusNodes[0]),
     );
+
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget buildInputField(int n, Function(String) onChanged) {
+      return CupertinoTextField(
+        focusNode: focusNodes[n],
+        decoration: BoxDecoration(
+          border: Border.all(
+              width: focusNodes[n]!.hasFocus ? 3 : 1,
+              color: pins[n]!
+                  ? CupertinoColors.activeBlue
+                  : CupertinoColors.systemGrey),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.center,
+        textInputAction:
+            n < pins.length - 1 ? TextInputAction.next : TextInputAction.done,
+        padding: const EdgeInsets.all(15),
+        maxLines: 1,
+        expands: false,
+        onChanged: onChanged,
+        maxLength: 1,
+        onEditingComplete: () {
+          setState(() {
+            n < pins.length - 1
+                ? FocusScope.of(context).requestFocus(focusNodes[n + 1])
+                : FocusScope.of(context).unfocus();
+
+            pins[n] = false;
+            if (n < pins.length - 1) pins[n + 1] = true;
+          });
+        },
+        onTap: () {
+          setState(() {
+            for (int p in pins.keys) {
+              pins[p] = false;
+            }
+            pins[n] = true;
+            FocusScope.of(context).requestFocus(focusNodes[n]);
+          });
+        },
+      );
+    }
+
     return Align(
       alignment: Alignment.center,
       child: Center(
@@ -48,17 +101,23 @@ class _JoinBookDialog extends State<JoinBookDialog> {
                 crossAxisCount: 1,
                 mainAxisSpacing: 25,
                 children: [
-                  const Text("Inserisci pin gruppo",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Inserisci pin gruppo",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   StaggeredGrid.count(
                     crossAxisSpacing: 10,
                     crossAxisCount: 4,
                     children: [
-                      buildInputField((value) => setState(() => pin_1 = value)),
-                      buildInputField((value) => setState(() => pin_2 = value)),
-                      buildInputField((value) => setState(() => pin_3 = value)),
-                      buildInputField((value) => setState(() => pin_4 = value)),
+                      buildInputField(
+                          0, (value) => setState(() => pin_1 = value)),
+                      buildInputField(
+                          1, (value) => setState(() => pin_2 = value)),
+                      buildInputField(
+                          2, (value) => setState(() => pin_3 = value)),
+                      buildInputField(
+                          3, (value) => setState(() => pin_4 = value)),
                     ],
                   ),
                   StaggeredGrid.count(
