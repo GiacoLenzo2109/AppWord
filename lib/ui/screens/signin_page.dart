@@ -164,7 +164,7 @@ class _SignInPage extends State<SignInPage> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        backgroundColor: CustomColors.mediumBlue,
+        backgroundColor: CupertinoColors.activeBlue,
         middle: Text(
           model.title,
           style: const TextStyle(
@@ -176,7 +176,7 @@ class _SignInPage extends State<SignInPage> {
         children: <Widget>[
           Container(
             height: size.height,
-            color: CustomColors.mediumBlue,
+            color: CupertinoColors.activeBlue,
           ),
           AnimatedPositioned(
             duration: const Duration(milliseconds: 500),
@@ -265,7 +265,7 @@ class _SignInPage extends State<SignInPage> {
                             !model.isLogin ? "Login" : "SignUp",
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: CustomColors.mediumBlue),
+                                color: CupertinoColors.activeBlue),
                           ),
                         ),
                       ],
@@ -280,7 +280,7 @@ class _SignInPage extends State<SignInPage> {
                           ),
                         ),
                         backgroundColor: MaterialStateProperty.all(
-                          CustomColors.mediumBlue,
+                          CupertinoColors.activeBlue,
                         ),
                         fixedSize:
                             MaterialStateProperty.all(Size(size.width, 65)),

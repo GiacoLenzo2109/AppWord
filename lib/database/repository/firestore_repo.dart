@@ -5,10 +5,11 @@ import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/entity/wordbook.dart';
 import 'package:app_word/database/firebase_global.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class FirestoreRepository {
-  static const String personalWordsBook = "Personal";
-  static const String classWordsBook = "Classroom";
+  static const String personalWordsBook = "Personale";
+  static const String classWordsBook = "Classe";
 
   //USERS
   static Future<bool> signUp(
@@ -25,6 +26,10 @@ class FirestoreRepository {
           .whenComplete(() => true);
     }
     return false;
+  }
+
+  static Future<DocumentSnapshot<Object?>> getUser(String id) {
+    return FirebaseGlobal.users.doc(id).get();
   }
 
   //WORDS-BOOK
@@ -115,6 +120,18 @@ class FirestoreRepository {
     return await FirebaseGlobal.dailyWords.limit(1).get();
   }
 
+  static Future<void> addDailyWord(Word word) async {
+    log("2_ Adding word: " + word.toString());
+
+    String id = FirebaseGlobal.dailyWords.doc().id;
+
+    return FirebaseGlobal.dailyWords
+        .doc(id)
+        .set(word.toMap())
+        .then((value) => log("Word Added"))
+        .catchError((error) => log("Failed to add word: $error"));
+  }
+
   static Future<void> addWord(Word word, String rubrica) async {
     log("2_ Adding word: " + word.toString());
 
@@ -133,14 +150,51 @@ class FirestoreRepository {
                     : FirebaseGlobal.auth.currentUser!.uid
               });
     }
+
+    String id = (rubrica == personalWordsBook
+            ? FirebaseGlobal.users
+            : FirebaseGlobal.wordBooks)
+        .doc(idRubrica)
+        .collection(FirebaseGlobal.words)
+        .doc()
+        .id;
+
     return (rubrica == personalWordsBook
             ? FirebaseGlobal.users
             : FirebaseGlobal.wordBooks)
         .doc(idRubrica)
         .collection(FirebaseGlobal.words)
-        .doc(word.word!.toLowerCase())
+        .doc(id)
         .set(word.toMap())
         .then((value) => log("Word Added"))
+        .catchError((error) => log("Failed to add word: $error"));
+  }
+
+  static Future<void> updateWord(Word word, String rubrica) async {
+    String idRubrica = "";
+
+    if (rubrica == personalWordsBook) {
+      idRubrica = FirebaseGlobal.auth.currentUser!.uid;
+    } else {
+      await FirebaseGlobal.wordBooks
+          .where('members', arrayContains: FirebaseGlobal.auth.currentUser!.uid)
+          .limit(1)
+          .get()
+          .then((value) => {
+                idRubrica = value.docs.isNotEmpty
+                    ? value.docs.first.id
+                    : FirebaseGlobal.auth.currentUser!.uid
+              });
+    }
+
+    return (rubrica == personalWordsBook
+            ? FirebaseGlobal.users
+            : FirebaseGlobal.wordBooks)
+        .doc(idRubrica)
+        .collection(FirebaseGlobal.words)
+        .doc(word.id)
+        .set(word.toMap())
+        .then((value) => log("Word Updated"))
         .catchError((error) => log("Failed to add word: $error"));
   }
 
@@ -193,13 +247,43 @@ class FirestoreRepository {
     } else {
       idRubrica = FirebaseGlobal.auth.currentUser!.uid;
     }
+
     return await (rubrica == personalWordsBook
             ? FirebaseGlobal.users
             : FirebaseGlobal.wordBooks)
         .doc(idRubrica)
         .collection(FirebaseGlobal.words)
-        .where(Word.WORD, isEqualTo: value)
+        .where(Word.WORD, isEqualTo: value.toLowerCase())
         .get();
+  }
+
+  static Stream<QuerySnapshot> getWordSnapshot(String rubrica, String word) {
+    String idRubrica = "";
+    if (rubrica == classWordsBook) {
+      FirebaseGlobal.wordBooks
+          .where('members', arrayContains: FirebaseGlobal.auth.currentUser!.uid)
+          .limit(1)
+          .get()
+          .then((value) {
+        idRubrica = value.docs.isNotEmpty
+            ? value.docs.first.id
+            : FirebaseGlobal.auth.currentUser!.uid;
+        return (rubrica == personalWordsBook
+                ? FirebaseGlobal.users
+                : FirebaseGlobal.wordBooks)
+            .doc(idRubrica)
+            .collection(FirebaseGlobal.words)
+            .snapshots();
+      });
+    } else {
+      idRubrica = FirebaseGlobal.auth.currentUser!.uid;
+    }
+    return (rubrica == personalWordsBook
+            ? FirebaseGlobal.users
+            : FirebaseGlobal.wordBooks)
+        .doc(idRubrica)
+        .collection(FirebaseGlobal.words)
+        .snapshots();
   }
 
   static Future<QuerySnapshot<Map<String, dynamic>>> getWords(
@@ -236,7 +320,8 @@ class FirestoreRepository {
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
             .where(Word.WORD, isEqualTo: value.toLowerCase())
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .get();
       } else if (semanticField == null && synonym != null && antonym == null) {
         return await FirebaseGlobal.wordBooks
@@ -257,7 +342,8 @@ class FirestoreRepository {
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
             .where(Word.WORD, isEqualTo: value.toLowerCase())
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .where(Word.SYNONYMS, arrayContains: synonym.toLowerCase())
             .get();
       } else if (semanticField != null && synonym == null && antonym != null) {
@@ -265,7 +351,8 @@ class FirestoreRepository {
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
             .where(Word.WORD, isEqualTo: value.toLowerCase())
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym.toLowerCase())
             .get();
       } else if (semanticField == null && synonym != null && antonym != null) {
@@ -273,7 +360,7 @@ class FirestoreRepository {
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
             .where(Word.WORD, isEqualTo: value.toLowerCase())
-            .where(Word.SYNONYMS, isEqualTo: synonym.toLowerCase())
+            .where(Word.SYNONYMS, arrayContains: synonym.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym.toLowerCase())
             .get();
       } else {
@@ -281,7 +368,8 @@ class FirestoreRepository {
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
             .where(Word.WORD, isEqualTo: value.toLowerCase())
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField!.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField!.toLowerCase())
             .where(Word.SYNONYMS, arrayContains: synonym!.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym!.toLowerCase())
             .get();
@@ -291,7 +379,8 @@ class FirestoreRepository {
         return await FirebaseGlobal.wordBooks
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .get();
       } else if (semanticField == null && synonym != null && antonym == null) {
         return await FirebaseGlobal.wordBooks
@@ -309,28 +398,31 @@ class FirestoreRepository {
         return await FirebaseGlobal.wordBooks
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .where(Word.SYNONYMS, arrayContains: synonym.toLowerCase())
             .get();
       } else if (semanticField != null && synonym == null && antonym != null) {
         return await FirebaseGlobal.wordBooks
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym.toLowerCase())
             .get();
       } else if (semanticField == null && synonym != null && antonym != null) {
         return await FirebaseGlobal.wordBooks
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
-            .where(Word.SYNONYMS, isEqualTo: synonym.toLowerCase())
+            .where(Word.SYNONYMS, arrayContains: synonym.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym.toLowerCase())
             .get();
       } else if (semanticField != null && synonym != null && antonym != null) {
         return await FirebaseGlobal.wordBooks
             .doc(idRubrica)
             .collection(FirebaseGlobal.words)
-            .where(Word.SEMANTIC_FIELD, isEqualTo: semanticField.toLowerCase())
+            .where(Word.SEMANTIC_FIELD,
+                arrayContains: semanticField.toLowerCase())
             .where(Word.SYNONYMS, arrayContains: synonym.toLowerCase())
             .where(Word.ANTONYMS, arrayContains: antonym.toLowerCase())
             .get();

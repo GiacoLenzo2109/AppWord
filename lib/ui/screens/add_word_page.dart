@@ -4,6 +4,7 @@ import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/firebase_global.dart';
 import 'package:app_word/database/repository/firestore_repo.dart';
 import 'package:app_word/res/global.dart';
+import 'package:app_word/res/theme_class.dart';
 import 'package:app_word/ui/widgets/error_dialog_widget.dart';
 import 'package:app_word/ui/widgets/loading_widget.dart';
 import 'package:app_word/viewmodel/navbar_model.dart';
@@ -15,7 +16,12 @@ import 'package:textfield_tags/textfield_tags.dart';
 class AddWordPage extends StatefulWidget {
   static const route = "/add_word";
 
-  const AddWordPage({Key? key}) : super(key: key);
+  final Word? word;
+
+  const AddWordPage({
+    Key? key,
+    this.word,
+  }) : super(key: key);
 
   @override
   State<AddWordPage> createState() => _AddWordPageState();
@@ -24,13 +30,19 @@ class AddWordPage extends StatefulWidget {
 class _AddWordPageState extends State<AddWordPage> {
   String wordsBook = FirestoreRepository.personalWordsBook;
 
-  String selectedValue = "Verbo";
+  String selectedValue = "";
 
   int genderValue = 0;
 
   int multeplicityValue = 0;
 
   int itaValue = 0;
+
+  bool definitionsLoaded = false;
+  bool semanticFieldsLoaded = false;
+  bool synLoaded = false;
+  bool antLoaded = false;
+  bool phrasesLoaded = false;
 
   int? selectedTipology;
   List<String> tipologies = [
@@ -48,21 +60,45 @@ class _AddWordPageState extends State<AddWordPage> {
     return list;
   }
 
-  late TextfieldTagsController synController,
-      antController,
-      phraseController,
-      definitionController,
-      semanticFieldController;
+  TextfieldTagsController synController = TextfieldTagsController(),
+      antController = TextfieldTagsController(),
+      phraseController = TextfieldTagsController(),
+      definitionController = TextfieldTagsController(),
+      semanticFieldController = TextfieldTagsController();
 
   Word word = Word();
 
   @override
   void initState() {
-    definitionController = TextfieldTagsController();
-    semanticFieldController = TextfieldTagsController();
-    synController = TextfieldTagsController();
-    antController = TextfieldTagsController();
-    phraseController = TextfieldTagsController();
+    if (widget.word != null) {
+      word = widget.word!;
+
+      selectedValue = widget.word!.type!.isNotEmpty
+          ? Global.capitalize(widget.word!.type!)
+          : Word.verbo;
+
+      selectedTipology = widget.word!.tipology!.isNotEmpty
+          ? tipologies.indexOf(widget.word!.tipology!)
+          : null;
+
+      genderValue = widget.word!.gender!.isNotEmpty
+          ? widget.word!.gender! == Word.male
+              ? 0
+              : 1
+          : 0;
+
+      multeplicityValue = widget.word!.multeplicity!.isNotEmpty
+          ? widget.word!.multeplicity! == Word.singular
+              ? 0
+              : 1
+          : 0;
+      itaValue = widget.word!.italianType!.isNotEmpty
+          ? widget.word!.italianType! == Word.modern
+              ? 0
+              : 1
+          : 0;
+    }
+
     super.initState();
   }
 
@@ -71,13 +107,50 @@ class _AddWordPageState extends State<AddWordPage> {
     final model = Provider.of<NavBarModel>(context);
 
     Future.delayed(const Duration(milliseconds: 0)).then((value) {
+      if (definitionController.getTags != null) {
+        if (!definitionsLoaded) {
+          for (var tag in word.definitions!) {
+            log(tag);
+            definitionController.onSubmitted(tag);
+          }
+        }
+        definitionsLoaded = true;
+        definitionController.onTagDelete("");
+      }
+      if (semanticFieldController.getTags != null) {
+        if (!semanticFieldsLoaded) {
+          for (var tag in word.semanticFields!) {
+            semanticFieldController.onSubmitted(tag);
+          }
+        }
+        semanticFieldsLoaded = true;
+        semanticFieldController.onTagDelete("");
+      }
       if (synController.getTags != null) {
+        if (!synLoaded) {
+          for (var tag in word.synonyms!) {
+            synController.onSubmitted(tag);
+          }
+        }
+        synLoaded = true;
         synController.onTagDelete("");
       }
       if (antController.getTags != null) {
+        if (!antLoaded) {
+          for (var tag in word.antonyms!) {
+            antController.onSubmitted(tag);
+          }
+        }
+        antLoaded = true;
         antController.onTagDelete("");
       }
       if (phraseController.getTags != null) {
+        if (!phrasesLoaded) {
+          for (var tag in word.examplePhrases!) {
+            phraseController.onSubmitted(tag);
+          }
+        }
+        phrasesLoaded = true;
         phraseController.onTagDelete("");
       }
     });
@@ -88,7 +161,8 @@ class _AddWordPageState extends State<AddWordPage> {
         backgroundColor: CupertinoTheme.of(context)
             .scaffoldBackgroundColor
             .withOpacity(0.75),
-        middle: const Text("Aggiungi vocabolo"),
+        middle: Text(
+            widget.word != null ? "Modifica vocabolo" : "Aggiungi vocabolo"),
       ),
       child: SingleChildScrollView(
         child: Padding(
@@ -106,36 +180,59 @@ class _AddWordPageState extends State<AddWordPage> {
                       Word.verbo: Text(
                         Word.verbo,
                         style: TextStyle(
-                          color: CupertinoTheme.of(context)
-                              .primaryContrastingColor,
+                          color: CupertinoTheme.of(context) ==
+                                  ThemeClass.darkThemeCupertino
+                              ? CupertinoTheme.of(context)
+                                  .primaryContrastingColor
+                              : selectedValue == Word.verbo
+                                  ? CupertinoTheme.of(context)
+                                      .scaffoldBackgroundColor
+                                  : CupertinoTheme.of(context)
+                                      .primaryContrastingColor,
                         ),
                       ),
                       Word.sostantivo: Text(
                         Word.sostantivo,
                         style: TextStyle(
-                          color: CupertinoTheme.of(context)
-                              .primaryContrastingColor,
+                          color: CupertinoTheme.of(context) ==
+                                  ThemeClass.darkThemeCupertino
+                              ? CupertinoTheme.of(context)
+                                  .primaryContrastingColor
+                              : selectedValue == Word.sostantivo
+                                  ? CupertinoTheme.of(context)
+                                      .scaffoldBackgroundColor
+                                  : CupertinoTheme.of(context)
+                                      .primaryContrastingColor,
                         ),
                       ),
                       Word.altro: Text(
                         Word.altro,
                         style: TextStyle(
-                          color: CupertinoTheme.of(context)
-                              .primaryContrastingColor,
+                          color: CupertinoTheme.of(context) ==
+                                  ThemeClass.darkThemeCupertino
+                              ? CupertinoTheme.of(context)
+                                  .primaryContrastingColor
+                              : selectedValue == Word.altro
+                                  ? CupertinoTheme.of(context)
+                                      .scaffoldBackgroundColor
+                                  : CupertinoTheme.of(context)
+                                      .primaryContrastingColor,
                         ),
                       ),
                     },
                     onValueChanged: (value) {
                       setState(() {
-                        selectedValue = value.toString();
-                        if (selectedValue == Word.sostantivo) {
-                          word.gender = Word.male;
-                          word.multeplicity = Word.singular;
-                        } else {
-                          word.gender = null;
-                          word.multeplicity = null;
+                        if (widget.word == null) {
+                          selectedValue = value.toString();
+                          if (selectedValue == Word.sostantivo) {
+                            word.gender = Word.male;
+                            word.multeplicity = Word.singular;
+                          } else {
+                            word.gender = null;
+                            word.multeplicity = null;
+                          }
+                          word.type = selectedValue;
                         }
-                        word.type = selectedValue;
                       });
                     },
                     groupValue: selectedValue,
@@ -188,10 +285,10 @@ class _AddWordPageState extends State<AddWordPage> {
                                                   selectedTipology != null
                                                       ? selectedTipology!
                                                       : 1),
-                                      onSelectedItemChanged: (index) => {
-                                        {selectedTipology = index},
+                                      onSelectedItemChanged: (index) {
+                                        selectedTipology = index;
                                         word.tipology = tipologies
-                                            .elementAt(selectedTipology!)
+                                            .elementAt(selectedTipology!);
                                       },
                                       children: getTipologies(),
                                     ),
@@ -202,7 +299,10 @@ class _AddWordPageState extends State<AddWordPage> {
                         ],
                       )),
                   Global.buildCupertinoTextField("Inserisci vocabolo", 1,
-                      CupertinoIcons.text_cursor, (value) => word.word = value),
+                      CupertinoIcons.text_cursor, (value) => word.word = value,
+                      text: widget.word != null
+                          ? Global.capitalize(widget.word!.word!)
+                          : null),
                   Visibility(
                     visible: selectedValue == "Sostantivo" ? true : false,
                     child: StaggeredGrid.count(
@@ -240,23 +340,33 @@ class _AddWordPageState extends State<AddWordPage> {
                     ),
                   ),
                   Global.buildTextFieldTags(
-                      "Definizione già inserita",
-                      "Inserisci definizione",
-                      null,
-                      definitionController,
-                      CupertinoIcons.text_justify),
+                    "Definizione già inserita",
+                    "Inserisci definizione",
+                    null,
+                    definitionController,
+                    CupertinoIcons.text_justify,
+                    initialTags:
+                        widget.word != null ? widget.word!.definitions : null,
+                  ),
                   Global.buildTextFieldTags(
-                      "Campo semantico già inserito",
-                      "Inserisci campo semantico",
-                      null,
-                      semanticFieldController,
-                      CupertinoIcons.textbox),
+                    "Campo semantico già inserito",
+                    "Inserisci campo semantico",
+                    null,
+                    semanticFieldController,
+                    CupertinoIcons.textbox,
+                    initialTags: widget.word != null
+                        ? widget.word!.semanticFields
+                        : null,
+                  ),
                   Global.buildTextFieldTags(
                     "Frase già inserita!",
                     "Inserire una frase",
                     null,
                     phraseController,
                     CupertinoIcons.text_quote,
+                    initialTags: widget.word != null
+                        ? widget.word!.examplePhrases
+                        : null,
                   ),
                   AnimatedScale(
                     scale: selectedValue != "Altro" ? 1 : 0,
@@ -266,17 +376,25 @@ class _AddWordPageState extends State<AddWordPage> {
                       mainAxisSpacing: 15,
                       children: [
                         Global.buildTextFieldTags(
-                            "Sinonimo già inserito!",
-                            "Inserire un sinonimo",
-                            " ",
-                            synController,
-                            CupertinoIcons.sun_max),
+                          "Sinonimo già inserito!",
+                          "Inserire un sinonimo",
+                          " ",
+                          synController,
+                          CupertinoIcons.sun_max,
+                          initialTags: widget.word != null
+                              ? widget.word!.synonyms
+                              : null,
+                        ),
                         Global.buildTextFieldTags(
-                            "Contrario già inserito!",
-                            "Inseriro un contrario",
-                            " ",
-                            antController,
-                            CupertinoIcons.moon),
+                          "Contrario già inserito!",
+                          "Inseriro un contrario",
+                          " ",
+                          antController,
+                          CupertinoIcons.moon,
+                          initialTags: widget.word != null
+                              ? widget.word!.antonyms
+                              : null,
+                        ),
                       ],
                     ),
                   ),
@@ -297,6 +415,11 @@ class _AddWordPageState extends State<AddWordPage> {
                   Visibility(
                     visible: itaValue == 1 ? true : false,
                     child: CupertinoTextField(
+                      controller: TextEditingController(
+                          text: widget.word != null &&
+                                  widget.word!.italianCorrespondence != null
+                              ? widget.word!.italianCorrespondence!
+                              : ""),
                       placeholder: "Corrispondenza italiano moderno",
                       onChanged: (value) => word.italianCorrespondence = value,
                     ),
@@ -308,19 +431,54 @@ class _AddWordPageState extends State<AddWordPage> {
                 children: [
                   Expanded(
                     child: CupertinoButton.filled(
-                      child: const Text(
-                        "Aggiungi",
-                        style: TextStyle(
+                      child: Text(
+                        widget.word != null ? "Aggiorna parola" : "Aggiungi",
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: CupertinoColors.white),
                       ),
                       onPressed: () async {
+                        word.definitions!.clear();
+                        word.semanticFields!.clear();
+                        word.synonyms!.clear();
+                        word.antonyms!.clear();
+                        word.examplePhrases!.clear();
+
+                        if (definitionController.getTags != null) {
+                          for (var def in definitionController.getTags!) {
+                            word.definitions!.add(def);
+                          }
+                        }
+                        if (semanticFieldController.getTags != null) {
+                          for (var sem in semanticFieldController.getTags!) {
+                            word.semanticFields!.add(sem);
+                          }
+                        }
+                        if (phraseController.getTags != null) {
+                          for (var phrase in phraseController.getTags!) {
+                            word.examplePhrases!.add(phrase);
+                          }
+                        }
+                        if (synController.getTags != null) {
+                          for (var syn in synController.getTags!) {
+                            word.synonyms!.add(syn);
+                          }
+                        }
+                        if (antController.getTags != null) {
+                          for (var ant in antController.getTags!) {
+                            word.antonyms!.add(ant);
+                          }
+                        }
                         if (word.word!.isEmpty) {
-                          showCupertinoDialog(
-                            context: context,
-                            builder: (context) => const ErrorDialogWidget(
-                                "Inserire il vocabolo!"),
-                          );
+                          if (widget.word != null) {
+                            word.word = widget.word!.word;
+                          } else {
+                            showCupertinoDialog(
+                              context: context,
+                              builder: (context) => const ErrorDialogWidget(
+                                  "Inserire il vocabolo!"),
+                            );
+                          }
                         } else if (word.definitions!.isEmpty) {
                           showCupertinoDialog(
                             context: context,
@@ -333,43 +491,47 @@ class _AddWordPageState extends State<AddWordPage> {
                             builder: (context) => const ErrorDialogWidget(
                                 "Inserire il campo semantico!"),
                           );
+                        } else if (word.italianType == Word.letteratura &&
+                            word.italianCorrespondence!.isEmpty) {
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (context) => const ErrorDialogWidget(
+                                "Inserire il termine in italiano moderno!"),
+                          );
                         } else {
                           showCupertinoDialog(
-                              context: context,
-                              builder: (context) => const LoadingWidget());
-                          if (definitionController.getTags != null) {
-                            for (var def in definitionController.getTags!) {
-                              word.definitions!.add(def);
-                            }
-                          }
-                          if (semanticFieldController.getTags != null) {
-                            for (var sem in semanticFieldController.getTags!) {
-                              word.semanticFields!.add(sem);
-                            }
-                          }
-                          if (phraseController.getTags != null) {
-                            for (var phrase in phraseController.getTags!) {
-                              word.examplePhrases!.add(phrase);
-                            }
-                          }
-                          if (synController.getTags != null) {
-                            for (var syn in synController.getTags!) {
-                              word.synonyms!.add(syn);
-                            }
-                          }
-                          if (antController.getTags != null) {
-                            for (var ant in antController.getTags!) {
-                              word.antonyms!.add(ant);
-                            }
-                          }
-                          log("1_ Word to add: " + word.toString());
-                          await FirestoreRepository.addWord(
-                              word, model.selectedBook);
-                          log("3_ Word added");
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                          //Navigator.pop(context);
+                            context: context,
+                            builder: (context) => const LoadingWidget(),
+                          );
                         }
+
+                        if (widget.word != null) {
+                          if (word.word!.isEmpty) {
+                            word.word = widget.word!.word!;
+                            if (word.italianCorrespondence!.isEmpty) {
+                              word.italianCorrespondence =
+                                  widget.word!.italianCorrespondence!;
+                            }
+                          }
+                          log("1_ Word to edit: " + word.toString());
+                          await FirestoreRepository.updateWord(
+                              word, model.selectedBook);
+                          log("3_ Word updated");
+                        } else {
+                          if (model.dailyWord) {
+                            model.setDailyWord(false);
+                            log("1_ Word to add: " + word.toString());
+                            await FirestoreRepository.addDailyWord(word);
+                            log("3_ Word added");
+                          } else {
+                            log("1_ Word to add: " + word.toString());
+                            await FirestoreRepository.addWord(
+                                word, model.selectedBook);
+                            log("3_ Word added");
+                          }
+                        }
+                        Navigator.pop(context);
+                        Navigator.pop(context);
                       },
                     ),
                   ),

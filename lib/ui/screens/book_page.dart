@@ -5,6 +5,8 @@ import 'package:app_word/database/firebase_global.dart';
 import 'package:app_word/database/repository/firestore_repo.dart';
 import 'package:app_word/res/global.dart';
 import 'package:app_word/ui/screens/add_word_page.dart';
+import 'package:app_word/ui/widgets/loading_widget.dart';
+import 'package:app_word/ui/widgets/word_book_widget.dart';
 import 'package:app_word/ui/widgets/words_book_widget.dart';
 import 'package:app_word/viewmodel/navbar_model.dart';
 import 'package:app_word/viewmodel/word_book_model.dart';
@@ -68,14 +70,6 @@ class _BookPage extends State<BookPage> {
           List<Map<String, bool>> maps = [];
           maps.add(personalWordBookModel.words);
           maps.add(classWordBookModel.words);
-
-          // if (maps.elementAt(model.selectedWordBook).isNotEmpty) {
-          //   for (var word in maps.elementAt(model.selectedWordBook).keys) {
-          //     if (models.elementAt(model.selectedWordBook).isClicked(word)) {
-          //       words.add(word);
-          //     }
-          //   }
-          // }
           model.setActionTrailing("Delete",
               words: models.elementAt(model.selectedWordBook).clickedWords,
               rubrica: model.selectedWordBook == 0
@@ -96,52 +90,51 @@ class _BookPage extends State<BookPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CupertinoSlidingSegmentedControl(
-                groupValue: model.selectedWordBook,
+                groupValue: model.selectedBook,
                 children: const {
-                  0: Text(
-                    "Personale",
+                  FirestoreRepository.personalWordsBook: Text(
+                    FirestoreRepository.personalWordsBook,
                     style: TextStyle(fontSize: 15),
                   ),
-                  1: Text(
-                    "Classe",
+                  FirestoreRepository.classWordsBook: Text(
+                    FirestoreRepository.classWordsBook,
                     style: TextStyle(fontSize: 15),
                   ),
                 },
-                onValueChanged: (index) {
+                onValueChanged: (value) {
                   setState(() {
-                    model.setWordBook(int.parse(index.toString()));
+                    model.setBook(value.toString());
                   });
-                  model.setBook(model.selectedWordBook == 0
-                      ? FirestoreRepository.personalWordsBook
-                      : FirestoreRepository.classWordsBook);
                 },
               ),
             ],
           ),
         ),
         StreamBuilder<QuerySnapshot>(
-            stream: classWordBook != null
-                ? (model.selectedWordBook == 0
-                    ? personalWordBook
-                    : classWordBook)
-                : null,
-            builder: (_, snapshot) {
-              List<Word> words = [];
-              List<String> wordsStrings = [];
-              if (snapshot.hasData) {
-                Map<int, QueryDocumentSnapshot<Object?>> wordsMap =
-                    snapshot.data!.docs.asMap();
+          stream: classWordBook != null
+              ? (model.selectedBook == FirestoreRepository.personalWordsBook
+                  ? personalWordBook
+                  : classWordBook)
+              : null,
+          builder: (context, snapshot) {
+            List<Word> words = [];
+            List<String> wordsStrings = [];
+            if (snapshot.hasData) {
+              Map<int, QueryDocumentSnapshot<Object?>> wordsMap =
+                  snapshot.data!.docs.asMap();
 
-                for (var word in wordsMap.values) {
-                  wordsStrings.add(word["word"]);
-                  words.add(
-                      Word.fromSnapshot(word.data() as Map<String, dynamic>));
+              for (var word in wordsMap.values) {
+                wordsStrings.add(word["word"]);
+                words.add(
+                  Word.fromSnapshot(
+                      word.data() as Map<String, dynamic>, word.id),
+                );
 
-                  model.selectedWordBook == 0
-                      ? personalWordBookModel.addWord(word["word"])
-                      : classWordBookModel.addWord(word["word"]);
-                }
+                model.selectedWordBook == 0
+                    ? personalWordBookModel.addWord(word["word"])
+                    : classWordBookModel.addWord(word["word"]);
               }
+
               return model.selectedWordBook == 0
                   ? SizedBox(
                       height: size.height - 175,
@@ -155,7 +148,10 @@ class _BookPage extends State<BookPage> {
                       child: WordsBook(
                           model, wordsStrings, classWordBookModel, words),
                     );
-            })
+            }
+            return const SizedBox();
+          },
+        ),
       ],
     );
   }

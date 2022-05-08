@@ -15,6 +15,9 @@ class Word {
   static const male = "Maschile";
   static const female = "Femminile";
 
+  static const ID = "id";
+  String? id;
+
   static const TYPE = "type";
   String? type;
 
@@ -24,10 +27,10 @@ class Word {
   static const TIMESTAMP = "timestamp";
   Timestamp? timestamp;
 
-  static const DEFINITION = "definition";
+  static const DEFINITION = "definitions";
   List<String>? definitions;
 
-  static const SEMANTIC_FIELD = "semantic_field";
+  static const SEMANTIC_FIELD = "semantic_fields";
   List<String>? semanticFields;
 
   static const EXAMPLE_PHRASES = "example_phrases";
@@ -55,7 +58,8 @@ class Word {
   String? italianCorrespondence;
 
   Word(
-      {String? type,
+      {String? id,
+      String? type,
       String? word,
       List<String>? definition,
       List<String>? semanticField,
@@ -67,7 +71,8 @@ class Word {
       String? tipology,
       String? gender,
       String? multeplicity})
-      : type = type ?? "Verbo",
+      : id = id ?? "",
+        type = type ?? "Verbo",
         word = word ?? "",
         timestamp = Timestamp.now(),
         definitions = definition ?? [],
@@ -113,6 +118,7 @@ class Word {
     }
     return {
       'author': FirebaseGlobal.auth.currentUser!.uid,
+      ID: id,
       TYPE: type == null ? type : type!.toLowerCase(),
       WORD: word == null ? word : word!.toLowerCase(),
       TIMESTAMP: timestamp,
@@ -133,7 +139,7 @@ class Word {
     };
   }
 
-  Word.fromSnapshot(Map<String, dynamic> snapshot)
+  Word.fromSnapshot(Map<String, dynamic> snapshot, this.id)
       : type = snapshot[TYPE],
         word = snapshot[WORD],
         timestamp = snapshot[TIMESTAMP],

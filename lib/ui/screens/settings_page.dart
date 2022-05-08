@@ -23,32 +23,43 @@ class SettingsPage extends StatelessWidget {
     return StaggeredGrid.count(
       crossAxisCount: 1,
       children: [
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(
-              height: 100,
+        const SizedBox(height: 65),
+        ElevatedButton(
+          style: ButtonStyle(
+            shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
             ),
-            ElevatedButton(
-              style: ButtonStyle(
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                backgroundColor: MaterialStateProperty.all(
-                  CupertinoColors.systemRed,
-                ),
-                fixedSize: MaterialStateProperty.all(
-                    Size(Global.getSize(context).width, 65)),
-              ),
-              onPressed: () {
-                signOut();
-              },
-              child: const Text(
-                "Logout",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
-              ),
+            backgroundColor: MaterialStateProperty.all(
+              CupertinoColors.systemRed,
+            ),
+          ),
+          onPressed: () {
+            signOut();
+          },
+          child: const Text(
+            "Logout",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        SizedBox(
+          height: Global.getSize(context).height - 225,
+        ),
+        StaggeredGrid.count(
+          crossAxisCount: 1,
+          children: const [
+            Text(
+              "Made by",
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: CupertinoColors.systemGrey3, fontSize: 10),
+            ),
+            Text(
+              "GiacoLenzo2109",
+              textAlign: TextAlign.center,
+              style:
+                  TextStyle(color: CupertinoColors.systemGrey3, fontSize: 13.5),
             ),
           ],
         ),

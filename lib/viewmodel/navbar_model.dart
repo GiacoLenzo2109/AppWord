@@ -110,7 +110,7 @@ class NavBarModel extends ChangeNotifier {
                         "Conferma",
                         words.length == 1
                             ? "Sei sicuro di eliminare la parola '" +
-                                words.first +
+                                Global.capitalize(words.first) +
                                 "' dalla rubrica?"
                             : "Sei sicuro di eliminare la parole selezionate dalla rubrica?",
                         words,
@@ -127,7 +127,7 @@ class NavBarModel extends ChangeNotifier {
 
   get selectedBook => _selectedBook;
 
-  String? _selectedBook;
+  String _selectedBook = FirestoreRepository.personalWordsBook;
 
   void setBook(String selectedBook) {
     _selectedBook = selectedBook;
@@ -147,6 +147,14 @@ class NavBarModel extends ChangeNotifier {
 
   void setWordBook(int index) {
     _selectedWordBook = index;
+    notifyListeners();
+  }
+
+  get dailyWord => _dailyWord;
+  bool _dailyWord = false;
+
+  void setDailyWord(bool value) {
+    _dailyWord = value;
     notifyListeners();
   }
 }

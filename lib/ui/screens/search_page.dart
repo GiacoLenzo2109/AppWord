@@ -59,7 +59,7 @@ class _SearchPageState extends State<SearchPage> {
                         (value) {
                           if (value.docs.isNotEmpty) {
                             for (var word in value.docs) {
-                              Word w = Word.fromSnapshot(word.data());
+                              Word w = Word.fromSnapshot(word.data(), word.id);
                               words.putIfAbsent(w.word!, () => w);
                             }
                           }
@@ -75,7 +75,7 @@ class _SearchPageState extends State<SearchPage> {
                         (value) {
                           if (value.docs.isNotEmpty) {
                             for (var word in value.docs) {
-                              Word w = Word.fromSnapshot(word.data());
+                              Word w = Word.fromSnapshot(word.data(), word.id);
                               words.putIfAbsent(w.word!, () => w);
                             }
                           }
@@ -88,7 +88,8 @@ class _SearchPageState extends State<SearchPage> {
                               FirestoreRepository.personalWordsBook, value)
                           .then((value) {
                         if (value.docs.isNotEmpty) {
-                          Word w = Word.fromSnapshot(value.docs.first.data());
+                          Word w = Word.fromSnapshot(
+                              value.docs.first.data(), value.docs.first.id);
                           words.putIfAbsent(w.word!, () => w);
                         }
                       }),
@@ -96,7 +97,8 @@ class _SearchPageState extends State<SearchPage> {
                               FirestoreRepository.classWordsBook, value)
                           .then((value) {
                         if (value.docs.isNotEmpty) {
-                          Word w = Word.fromSnapshot(value.docs.first.data());
+                          Word w = Word.fromSnapshot(
+                              value.docs.first.data(), value.docs.first.id);
                           words.putIfAbsent(w.word!, () => w);
                         }
                       }),
@@ -131,7 +133,7 @@ class _SearchPageState extends State<SearchPage> {
                         (value) {
                           if (value.docs.isNotEmpty) {
                             for (var word in value.docs) {
-                              Word w = Word.fromSnapshot(word.data());
+                              Word w = Word.fromSnapshot(word.data(), word.id);
                               words.putIfAbsent(w.word!, () => w);
                             }
                           }
@@ -147,7 +149,7 @@ class _SearchPageState extends State<SearchPage> {
                         (value) {
                           if (value.docs.isNotEmpty) {
                             for (var word in value.docs) {
-                              Word w = Word.fromSnapshot(word.data());
+                              Word w = Word.fromSnapshot(word.data(), word.id);
                               words.putIfAbsent(w.word!, () => w);
                             }
                           }

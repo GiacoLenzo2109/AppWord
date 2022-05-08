@@ -58,7 +58,7 @@ class _WordsBookState extends State<WordsBook> {
                 return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 30, left: 10),
+                      padding: const EdgeInsets.only(left: 10),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -82,15 +82,15 @@ class _WordsBookState extends State<WordsBook> {
                 widget.wordsEntity.elementAt(index),
               );
             },
-            headerWidgetList: <AlphabetScrollListHeader>[
-              AlphabetScrollListHeader(
-                widgetList: [
-                  const CupertinoSearchTextField(),
-                ],
-                icon: const Icon(CupertinoIcons.search),
-                indexedHeaderHeight: (index) => 35,
-              ),
-            ],
+            // headerWidgetList: <AlphabetScrollListHeader>[
+            //   AlphabetScrollListHeader(
+            //     widgetList: [
+            //       const CupertinoSearchTextField(),
+            //     ],
+            //     icon: const Icon(CupertinoIcons.search),
+            //     indexedHeaderHeight: (index) => 35,
+            //   ),
+            // ],
           )
         : Center(
             child: StaggeredGrid.count(

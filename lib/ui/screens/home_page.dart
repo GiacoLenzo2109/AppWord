@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:app_word/database/entity/user.dart';
 import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/firebase_global.dart';
 import 'package:app_word/database/repository/firestore_repo.dart';
@@ -11,6 +12,7 @@ import 'package:app_word/ui/screens/join_book_dialog.dart';
 import 'package:app_word/ui/screens/word_page.dart';
 import 'package:app_word/ui/widgets/loading_widget.dart';
 import 'package:app_word/ui/widgets/pie_chart_widget.dart';
+import 'package:app_word/ui/widgets/select_word_book_widget.dart';
 import 'package:app_word/ui/widgets/word_item_list_widget.dart';
 import 'package:app_word/viewmodel/navbar_model.dart';
 import 'package:flutter/cupertino.dart';
@@ -32,8 +34,11 @@ class _HomePage extends State<HomePage> {
   int selectedIndex = 0;
   int badge = 0;
 
-  late Word? dailyWord;
-  late Map<String, Word> newWords = {};
+  Word? dailyWord;
+
+  late bool admin;
+
+  Map<String, Word> newWords = {};
 
   bool loaded = false;
 
@@ -41,14 +46,12 @@ class _HomePage extends State<HomePage> {
 
   @override
   void initState() {
+    FirestoreRepository.getUser(FirebaseGlobal.auth.currentUser!.uid).then(
+      (value) {
+        admin = value.get(User.ADMIN) as bool;
+      },
+    );
     super.initState();
-
-    // WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-    //   if (mounted) {
-    //     showCupertinoDialog(
-    //         context: context, builder: (context) => const LoadingWidget());
-    //   }
-    // });
   }
 
   @override
@@ -107,9 +110,7 @@ class _HomePage extends State<HomePage> {
                                         CupertinoButton(
                                           padding: const EdgeInsets.all(0),
                                           child: Text(
-                                            dailyWord != null
-                                                ? dailyWord!.word!
-                                                : ". . .",
+                                            dailyWord!.word!,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 22.0,
@@ -118,8 +119,10 @@ class _HomePage extends State<HomePage> {
                                           onPressed: () => Navigator.push(
                                             model.context,
                                             CupertinoPageRoute(
-                                              builder: (context) =>
-                                                  WordPage(dailyWord!),
+                                              builder: (context) => WordPage(
+                                                dailyWord!,
+                                                editable: false,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -174,7 +177,8 @@ class _HomePage extends State<HomePage> {
                           const SizedBox(height: 7.5),
                           ElevatedButton(
                             onPressed: () => {
-                              model.setWordBook(0),
+                              model.setBook(
+                                  FirestoreRepository.personalWordsBook),
                               model.openWordBook(true),
                             },
                             style: ButtonStyle(
@@ -185,7 +189,7 @@ class _HomePage extends State<HomePage> {
                                   Size(size.width, 50)),
                             ),
                             child: const Text(
-                              "Personale",
+                              FirestoreRepository.personalWordsBook,
                               style: TextStyle(
                                   fontWeight: FontWeight.w700, fontSize: 15.0),
                             ),
@@ -193,7 +197,7 @@ class _HomePage extends State<HomePage> {
                           const SizedBox(height: 22.5),
                           ElevatedButton(
                             onPressed: () => {
-                              model.setWordBook(1),
+                              model.setBook(FirestoreRepository.classWordsBook),
                               model.openWordBook(true),
                             },
                             style: ButtonStyle(
@@ -204,7 +208,7 @@ class _HomePage extends State<HomePage> {
                                   Size(size.width, 50)),
                             ),
                             child: const Text(
-                              "Classe",
+                              FirestoreRepository.classWordsBook,
                               style: TextStyle(
                                   fontWeight: FontWeight.w700, fontSize: 15.0),
                             ),
@@ -278,6 +282,7 @@ class _HomePage extends State<HomePage> {
                                               builder: (context) => WordPage(
                                                 newWords.values
                                                     .elementAt(index),
+                                                editable: false,
                                               ),
                                             ),
                                           );
@@ -302,31 +307,34 @@ class _HomePage extends State<HomePage> {
                             ),
                           ),
                         ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildTile(
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 21),
-                                  child: Icon(
-                                    Icons.add_rounded,
-                                    size: 50,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                                onTap: () => showCupertinoModalBottomSheet(
-                                    context: model.context,
-                                    builder: (context) => const AddWordPage()),
-                              ),
-                            ),
-                          ],
-                        ),
                         SizedBox(
                           height: size.height / 25,
                         )
                       ],
                     )
                   : const SizedBox(height: 0),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTile(
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 21),
+                        child: Icon(
+                          Icons.add_rounded,
+                          size: 50,
+                          color: Colors.orange,
+                        ),
+                      ),
+                      onTap: () {
+                        showCupertinoDialog(
+                          context: model.context,
+                          builder: (context) => SelectWordBook(admin),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -568,9 +576,7 @@ class _HomePage extends State<HomePage> {
                               ),
                             ),
                           ),
-                          onTap: () => showCupertinoModalBottomSheet(
-                              context: model.context,
-                              builder: (context) => const AddWordPage()),
+                          onTap: () => {},
                         ),
                       ),
                     ],
@@ -588,27 +594,25 @@ class _HomePage extends State<HomePage> {
 
     Future<bool> fetchData() async {
       if (FirebaseGlobal.auth.currentUser != null) {
-        await FirestoreRepository.getDailyWord().then((word) async {
-          if (word.docs.isNotEmpty) {
-            dailyWord = Word.fromSnapshot(
-                word.docs.first.data() as Map<String, dynamic>);
-          } else {
-            dailyWord = null;
-          }
+        var word = await FirestoreRepository.getDailyWord();
+        if (word.docs.isNotEmpty) {
+          dailyWord = Word.fromSnapshot(
+              word.docs.first.data() as Map<String, dynamic>,
+              word.docs.first.id);
+        }
+        var words = await FirestoreRepository.getAllWords(
+            FirestoreRepository.classWordsBook);
 
-          var words = await FirestoreRepository.getAllWords(
-              FirestoreRepository.classWordsBook);
-
-          if (words != null && words.docs.isNotEmpty) {
-            for (var item in words.docs) {
-              Word word =
-                  Word.fromSnapshot(item.data() as Map<String, dynamic>);
-              newWords.putIfAbsent(word.word!, () => word);
-            }
+        if (words != null && words.docs.isNotEmpty) {
+          for (var item in words.docs) {
+            Word word =
+                Word.fromSnapshot(item.data() as Map<String, dynamic>, item.id);
+            newWords.putIfAbsent(word.word!, () => word);
           }
-          loaded = true;
-          return true;
-        });
+        }
+        loaded = true;
+
+        return true;
       }
       return false;
     }
