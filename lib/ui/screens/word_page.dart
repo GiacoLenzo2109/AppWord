@@ -127,15 +127,16 @@ class _WordPageState extends State<WordPage> {
                         mainAxisSpacing: 14,
                         children: [
                           Visibility(
-                            visible: widget.word.type == Word.sostantivo
-                                ? true
-                                : false,
+                            visible:
+                                widget.word.type != Word.altro ? true : false,
                             child: Text(
-                              widget.word.type! +
-                                  ", " +
-                                  widget.word.gender! +
-                                  ", " +
-                                  widget.word.multeplicity!,
+                              widget.word.type! == Word.sostantivo
+                                  ? widget.word.type! +
+                                      ", " +
+                                      widget.word.gender! +
+                                      ", " +
+                                      widget.word.multeplicity!
+                                  : widget.word.type!,
                               style: const TextStyle(
                                   color: CupertinoColors.systemGrey,
                                   fontStyle: FontStyle.italic),
