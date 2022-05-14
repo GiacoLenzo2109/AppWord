@@ -26,64 +26,59 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPage extends State<BookPage> {
-  List<WordBookModel> models = [];
-  var personalWordBookModel = WordBookModel();
-  var classWordBookModel = WordBookModel();
-
   bool addCheck = true;
+  bool notInitialized = true;
   late String id;
 
-  Future<String?> getID() async {
-    return await FirestoreRepository.getWordsBook()
-        .then((value) => value.docs.isNotEmpty ? value.docs.first.id : null);
-  }
+  List<Widget> wordsBook = [const SizedBox(), const SizedBox()];
 
-  Stream<QuerySnapshot<Object?>>? personalWordBook;
+  String selectedBook = FirestoreRepository.personalWordsBook;
 
-  Stream<QuerySnapshot<Object?>>? classWordBook;
-
-  @override
-  void initState() {
-    models.add(personalWordBookModel);
-    models.add(classWordBookModel);
-    if (FirebaseGlobal.auth.currentUser != null) {
-      personalWordBook = FirestoreRepository.getPersonalWordBookSnapshot();
-      getID().then((value) => value != null
-          ? classWordBook = FirestoreRepository.getWordsBookSnapshot(value)
-          : null);
-    }
-
-    super.initState();
-  }
+  bool resetWords = false;
 
   @override
   Widget build(BuildContext context) {
     final size = Global.getSize(context);
     final model = Provider.of<NavBarModel>(context);
 
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      setState(() {
-        if (!model.isTappedLeading) {
-          model.setActionTrailing(AddWordPage.route);
-        }
-        if (model.isTappedLeading) {
-          List<Map<String, bool>> maps = [];
-          maps.add(personalWordBookModel.words);
-          maps.add(classWordBookModel.words);
-          model.setActionTrailing("Delete",
-              words: models.elementAt(model.selectedWordBook).clickedWords,
-              rubrica: model.selectedWordBook == 0
-                  ? FirestoreRepository.personalWordsBook
-                  : FirestoreRepository.classWordsBook);
-        }
-      });
-    });
+    Future.delayed(
+      const Duration(milliseconds: 0),
+      () => {
+        setState(
+          () {
+            if (notInitialized) {
+              wordsBook.clear();
+              wordsBook.add(
+                SizedBox(
+                  height: size.height - 175,
+                  width: size.width,
+                  child: const WordsBook(
+                    FirestoreRepository.personalWordsBook,
+                  ),
+                ),
+              );
+              wordsBook.add(
+                SizedBox(
+                  height: size.height - 175,
+                  width: size.width,
+                  child: const WordsBook(
+                    FirestoreRepository.classWordsBook,
+                  ),
+                ),
+              );
+              notInitialized = false;
+            }
+            selectedBook = model.selectedBook;
+          },
+        )
+      },
+    );
 
     return StaggeredGrid.count(
       crossAxisCount: 1,
       mainAxisSpacing: 14,
       children: [
-        const SizedBox(height: 50),
+        SizedBox(height: Global.getSize(context).height / 12),
         Padding(
           padding: const EdgeInsets.only(right: 15),
           child: Row(
@@ -110,47 +105,9 @@ class _BookPage extends State<BookPage> {
             ],
           ),
         ),
-        StreamBuilder<QuerySnapshot>(
-          stream: classWordBook != null
-              ? (model.selectedBook == FirestoreRepository.personalWordsBook
-                  ? personalWordBook
-                  : classWordBook)
-              : null,
-          builder: (context, snapshot) {
-            List<Word> words = [];
-            List<String> wordsStrings = [];
-            if (snapshot.hasData) {
-              Map<int, QueryDocumentSnapshot<Object?>> wordsMap =
-                  snapshot.data!.docs.asMap();
-
-              for (var word in wordsMap.values) {
-                wordsStrings.add(word["word"]);
-                words.add(
-                  Word.fromSnapshot(
-                      word.data() as Map<String, dynamic>, word.id),
-                );
-
-                model.selectedWordBook == 0
-                    ? personalWordBookModel.addWord(word["word"])
-                    : classWordBookModel.addWord(word["word"]);
-              }
-
-              return model.selectedWordBook == 0
-                  ? SizedBox(
-                      height: size.height - 175,
-                      width: size.width,
-                      child: WordsBook(
-                          model, wordsStrings, personalWordBookModel, words),
-                    )
-                  : SizedBox(
-                      height: size.height - 175,
-                      width: size.width,
-                      child: WordsBook(
-                          model, wordsStrings, classWordBookModel, words),
-                    );
-            }
-            return const SizedBox();
-          },
+        IndexedStack(
+          index: selectedBook == FirestoreRepository.personalWordsBook ? 0 : 1,
+          children: wordsBook,
         ),
       ],
     );

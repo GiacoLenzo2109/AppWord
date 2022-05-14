@@ -1,4 +1,5 @@
 import 'package:app_word/database/firebase_global.dart';
+import 'package:app_word/res/global.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
@@ -78,7 +79,7 @@ class Word {
         definitions = definition ?? [],
         semanticFields = semanticField ?? [],
         examplePhrases = examplePhrases ?? [],
-        italianType = italianType ?? "Italiano moderno",
+        italianType = italianType ?? Word.modern,
         italianCorrespondence = italianCorrespondence ?? "",
         synonyms = synonyms ?? [],
         antonyms = antonyms ?? [],
@@ -140,7 +141,7 @@ class Word {
   }
 
   Word.fromSnapshot(Map<String, dynamic> snapshot, this.id)
-      : type = snapshot[TYPE],
+      : type = Global.capitalize(snapshot[TYPE]),
         word = snapshot[WORD],
         timestamp = snapshot[TIMESTAMP],
         definitions = List<String>.from(snapshot[DEFINITION]),
@@ -148,9 +149,24 @@ class Word {
         examplePhrases = List<String>.from(snapshot[EXAMPLE_PHRASES]),
         synonyms = List<String>.from(snapshot[SYNONYMS]),
         antonyms = List<String>.from(snapshot[ANTONYMS]),
-        gender = snapshot[GENDER],
-        multeplicity = snapshot[MULTEPLICITY],
-        tipology = snapshot[TIPOLOGY],
-        italianType = snapshot[ITALIAN_TYPE],
-        italianCorrespondence = snapshot[ITALIAN_CORRESPONDENCE];
+        gender =
+            snapshot[GENDER] != null && snapshot[GENDER].toString().isNotEmpty
+                ? Global.capitalize(snapshot[GENDER])
+                : snapshot[GENDER],
+        multeplicity = snapshot[MULTEPLICITY] != null &&
+                snapshot[MULTEPLICITY].toString().isNotEmpty
+            ? Global.capitalize(snapshot[MULTEPLICITY])
+            : snapshot[MULTEPLICITY],
+        tipology = snapshot[TIPOLOGY] != null &&
+                snapshot[TIPOLOGY].toString().isNotEmpty
+            ? Global.capitalize(snapshot[TIPOLOGY])
+            : snapshot[TIPOLOGY],
+        italianType = snapshot[ITALIAN_TYPE] != null &&
+                snapshot[ITALIAN_TYPE].toString().isNotEmpty
+            ? Global.capitalize(snapshot[ITALIAN_TYPE])
+            : snapshot[ITALIAN_TYPE],
+        italianCorrespondence = snapshot[ITALIAN_CORRESPONDENCE] != null &&
+                snapshot[ITALIAN_CORRESPONDENCE].toString().isNotEmpty
+            ? Global.capitalize(snapshot[ITALIAN_CORRESPONDENCE])
+            : snapshot[ITALIAN_CORRESPONDENCE];
 }

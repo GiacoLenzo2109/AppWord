@@ -16,7 +16,10 @@ class _LoadingWidgetState extends State<LoadingWidget> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Lottie.asset("assets/loading.json", height: 10),
+      child: Lottie.asset(
+        "assets/loading.json",
+        height: 10,
+      ),
     );
   }
 }

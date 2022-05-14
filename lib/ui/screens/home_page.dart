@@ -36,7 +36,7 @@ class _HomePage extends State<HomePage> {
 
   Word? dailyWord;
 
-  late bool admin;
+  bool? admin = false;
 
   Map<String, Word> newWords = {};
 
@@ -76,9 +76,7 @@ class _HomePage extends State<HomePage> {
             mainAxisSpacing: 14,
             crossAxisSpacing: 14,
             children: <Widget>[
-              SizedBox(
-                height: Global.getSize(context).height / 25,
-              ),
+              SizedBox(height: Global.getSize(context).height / 12),
               dailyWord != null
                   ? _buildTile(
                       Padding(
@@ -109,11 +107,15 @@ class _HomePage extends State<HomePage> {
                                       children: [
                                         CupertinoButton(
                                           padding: const EdgeInsets.all(0),
-                                          child: Text(
-                                            dailyWord!.word!,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 22.0,
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              Global.capitalize(
+                                                  dailyWord!.word!),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 22.0,
+                                              ),
                                             ),
                                           ),
                                           onPressed: () => Navigator.push(
@@ -269,7 +271,7 @@ class _HomePage extends State<HomePage> {
                                 ),
                                 SizedBox(
                                   width: size.width,
-                                  height: size.height / 2 - 22.5,
+                                  height: newWords.length * 65,
                                   child: ListView.separated(
                                     padding: const EdgeInsets.all(0),
                                     itemCount: newWords.length,
@@ -307,9 +309,6 @@ class _HomePage extends State<HomePage> {
                             ),
                           ),
                         ),
-                        SizedBox(
-                          height: size.height / 25,
-                        )
                       ],
                     )
                   : const SizedBox(height: 0),
@@ -328,12 +327,15 @@ class _HomePage extends State<HomePage> {
                       onTap: () {
                         showCupertinoDialog(
                           context: model.context,
-                          builder: (context) => SelectWordBook(admin),
+                          builder: (context) => SelectWordBook(admin!),
                         );
                       },
                     ),
                   ),
                 ],
+              ),
+              SizedBox(
+                height: Global.getSize(context).height / 12,
               ),
             ],
           ),
@@ -581,9 +583,6 @@ class _HomePage extends State<HomePage> {
                       ),
                     ],
                   ),
-                  SizedBox(
-                    height: size.height / 25,
-                  )
                 ],
               ),
             ],
@@ -607,7 +606,8 @@ class _HomePage extends State<HomePage> {
           for (var item in words.docs) {
             Word word =
                 Word.fromSnapshot(item.data() as Map<String, dynamic>, item.id);
-            newWords.putIfAbsent(word.word!, () => word);
+            word.word = Global.capitalize(word.word!);
+            newWords.putIfAbsent(Global.capitalize(word.word!), () => word);
           }
         }
         loaded = true;

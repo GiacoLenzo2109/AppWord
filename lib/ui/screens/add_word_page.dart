@@ -30,13 +30,13 @@ class AddWordPage extends StatefulWidget {
 class _AddWordPageState extends State<AddWordPage> {
   String wordsBook = FirestoreRepository.personalWordsBook;
 
-  String selectedValue = "";
+  String selectedValue = Word.verbo;
 
   int genderValue = 0;
 
   int multeplicityValue = 0;
 
-  int itaValue = 0;
+  String itaValue = Word.modern;
 
   bool definitionsLoaded = false;
   bool semanticFieldsLoaded = false;
@@ -77,26 +77,28 @@ class _AddWordPageState extends State<AddWordPage> {
           ? Global.capitalize(widget.word!.type!)
           : Word.verbo;
 
-      selectedTipology = widget.word!.tipology!.isNotEmpty
-          ? tipologies.indexOf(widget.word!.tipology!)
-          : null;
+      selectedTipology =
+          widget.word!.tipology != null && widget.word!.tipology!.isNotEmpty
+              ? tipologies.indexOf(widget.word!.tipology!)
+              : null;
 
-      genderValue = widget.word!.gender!.isNotEmpty
-          ? widget.word!.gender! == Word.male
-              ? 0
-              : 1
-          : 0;
+      genderValue =
+          widget.word!.gender != null && widget.word!.gender!.isNotEmpty
+              ? widget.word!.gender! == Word.male
+                  ? 0
+                  : 1
+              : 0;
 
-      multeplicityValue = widget.word!.multeplicity!.isNotEmpty
+      multeplicityValue = widget.word!.multeplicity != null &&
+              widget.word!.multeplicity!.isNotEmpty
           ? widget.word!.multeplicity! == Word.singular
               ? 0
               : 1
           : 0;
-      itaValue = widget.word!.italianType!.isNotEmpty
-          ? widget.word!.italianType! == Word.modern
-              ? 0
-              : 1
-          : 0;
+      itaValue = widget.word!.italianType != null &&
+              widget.word!.italianType!.isNotEmpty
+          ? widget.word!.italianType!
+          : Word.modern;
     }
 
     super.initState();
@@ -111,7 +113,7 @@ class _AddWordPageState extends State<AddWordPage> {
         if (!definitionsLoaded) {
           for (var tag in word.definitions!) {
             log(tag);
-            definitionController.onSubmitted(tag);
+            definitionController.onSubmitted(Global.capitalize(tag));
           }
         }
         definitionsLoaded = true;
@@ -120,7 +122,7 @@ class _AddWordPageState extends State<AddWordPage> {
       if (semanticFieldController.getTags != null) {
         if (!semanticFieldsLoaded) {
           for (var tag in word.semanticFields!) {
-            semanticFieldController.onSubmitted(tag);
+            semanticFieldController.onSubmitted(Global.capitalize(tag));
           }
         }
         semanticFieldsLoaded = true;
@@ -129,7 +131,7 @@ class _AddWordPageState extends State<AddWordPage> {
       if (synController.getTags != null) {
         if (!synLoaded) {
           for (var tag in word.synonyms!) {
-            synController.onSubmitted(tag);
+            synController.onSubmitted(Global.capitalize(tag));
           }
         }
         synLoaded = true;
@@ -138,7 +140,7 @@ class _AddWordPageState extends State<AddWordPage> {
       if (antController.getTags != null) {
         if (!antLoaded) {
           for (var tag in word.antonyms!) {
-            antController.onSubmitted(tag);
+            antController.onSubmitted(Global.capitalize(tag));
           }
         }
         antLoaded = true;
@@ -147,7 +149,7 @@ class _AddWordPageState extends State<AddWordPage> {
       if (phraseController.getTags != null) {
         if (!phrasesLoaded) {
           for (var tag in word.examplePhrases!) {
-            phraseController.onSubmitted(tag);
+            phraseController.onSubmitted(Global.capitalize(tag));
           }
         }
         phrasesLoaded = true;
@@ -167,7 +169,7 @@ class _AddWordPageState extends State<AddWordPage> {
       child: SingleChildScrollView(
         child: Padding(
           padding:
-              const EdgeInsets.only(top: 65, right: 15, left: 15, bottom: 15),
+              const EdgeInsets.only(top: 65, right: 15, left: 15, bottom: 50),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -368,9 +370,8 @@ class _AddWordPageState extends State<AddWordPage> {
                         ? widget.word!.examplePhrases
                         : null,
                   ),
-                  AnimatedScale(
-                    scale: selectedValue != "Altro" ? 1 : 0,
-                    duration: const Duration(milliseconds: 500),
+                  Visibility(
+                    visible: selectedValue != "Altro" ? true : false,
                     child: StaggeredGrid.count(
                       crossAxisCount: 1,
                       mainAxisSpacing: 15,
@@ -401,28 +402,26 @@ class _AddWordPageState extends State<AddWordPage> {
                   CupertinoSlidingSegmentedControl(
                       groupValue: itaValue,
                       children: const {
-                        0: Text("Ita moderno"),
-                        1: Text("Ita letteratura"),
+                        Word.modern: Text("Ita moderno"),
+                        Word.letteratura: Text("Ita letteratura"),
                       },
-                      onValueChanged: (index) {
+                      onValueChanged: (value) {
                         setState(() {
-                          itaValue = index as int;
-                          word.italianCorrespondence = itaValue == 0
-                              ? "Italiano moderno"
-                              : "Italiano letteratura";
+                          itaValue = value as String;
+                          word.italianCorrespondence = itaValue;
                         });
                       }),
                   Visibility(
-                    visible: itaValue == 1 ? true : false,
-                    child: CupertinoTextField(
-                      controller: TextEditingController(
-                          text: widget.word != null &&
-                                  widget.word!.italianCorrespondence != null
-                              ? widget.word!.italianCorrespondence!
-                              : ""),
-                      placeholder: "Corrispondenza italiano moderno",
-                      onChanged: (value) => word.italianCorrespondence = value,
-                    ),
+                    visible: itaValue == Word.letteratura ? true : false,
+                    child: Global.buildCupertinoTextField(
+                        "Corrispondenza italiano moderno",
+                        1,
+                        CupertinoIcons.text_cursor,
+                        (value) => word.italianCorrespondence = value,
+                        text: widget.word != null &&
+                                widget.word!.italianCorrespondence != null
+                            ? widget.word!.italianCorrespondence!
+                            : null),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -503,35 +502,35 @@ class _AddWordPageState extends State<AddWordPage> {
                             context: context,
                             builder: (context) => const LoadingWidget(),
                           );
-                        }
 
-                        if (widget.word != null) {
-                          if (word.word!.isEmpty) {
-                            word.word = widget.word!.word!;
-                            if (word.italianCorrespondence!.isEmpty) {
-                              word.italianCorrespondence =
-                                  widget.word!.italianCorrespondence!;
+                          if (widget.word != null) {
+                            if (word.word!.isEmpty) {
+                              word.word = widget.word!.word!;
+                              if (word.italianCorrespondence!.isEmpty) {
+                                word.italianCorrespondence =
+                                    widget.word!.italianCorrespondence!;
+                              }
+                            }
+                            log("1_ Word to edit: " + word.toString());
+                            await FirestoreRepository.updateWord(
+                                word, model.selectedBook);
+                            log("3_ Word updated");
+                          } else {
+                            if (model.dailyWord) {
+                              model.setDailyWord(false);
+                              log("1_ Word to add: " + word.toString());
+                              await FirestoreRepository.addDailyWord(word);
+                              log("3_ Word added");
+                            } else {
+                              log("1_ Word to add: " + word.toString());
+                              await FirestoreRepository.addWord(
+                                  word, model.selectedBook);
+                              log("3_ Word added");
                             }
                           }
-                          log("1_ Word to edit: " + word.toString());
-                          await FirestoreRepository.updateWord(
-                              word, model.selectedBook);
-                          log("3_ Word updated");
-                        } else {
-                          if (model.dailyWord) {
-                            model.setDailyWord(false);
-                            log("1_ Word to add: " + word.toString());
-                            await FirestoreRepository.addDailyWord(word);
-                            log("3_ Word added");
-                          } else {
-                            log("1_ Word to add: " + word.toString());
-                            await FirestoreRepository.addWord(
-                                word, model.selectedBook);
-                            log("3_ Word added");
-                          }
+                          Navigator.pop(context);
+                          Navigator.pop(context);
                         }
-                        Navigator.pop(context);
-                        Navigator.pop(context);
                       },
                     ),
                   ),

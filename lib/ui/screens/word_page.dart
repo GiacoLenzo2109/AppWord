@@ -37,12 +37,12 @@ class _WordPageState extends State<WordPage> {
         ? wordSnapshot =
             FirestoreRepository.getWordSnapshot(value, widget.word.id!)
         : null);
-
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    Word word;
     return FutureBuilder(
       future: FirestoreRepository.getWord(
               FirestoreRepository.personalWordsBook, widget.word.word!)
@@ -53,19 +53,19 @@ class _WordPageState extends State<WordPage> {
       builder: (context, snapshot) => StreamBuilder<QuerySnapshot>(
           stream: wordSnapshot,
           builder: (context, wordSnapshot) {
-            Word? word;
             if (wordSnapshot.hasData && wordSnapshot.data!.docs.isNotEmpty) {
               word = Word.fromSnapshot(
                   wordSnapshot.data!.docs.first as Map<String, dynamic>,
                   widget.word.id!);
-              widget.word = word;
+            } else {
+              word = widget.word;
             }
             return SizedBox.expand(
               child: CupertinoPageScaffold(
                 child: CustomScrollView(
                   slivers: <Widget>[
                     CupertinoSliverNavigationBar(
-                        largeTitle: Text(Global.capitalize(widget.word.word!)),
+                        largeTitle: Text(Global.capitalize(word.word!)),
                         border: null,
                         backgroundColor: CupertinoTheme.of(context)
                             .scaffoldBackgroundColor
@@ -90,7 +90,7 @@ class _WordPageState extends State<WordPage> {
                                       ),
                                       onPressed: () {
                                         FirestoreRepository.addWord(
-                                                widget.word,
+                                                word,
                                                 FirestoreRepository
                                                     .personalWordsBook)
                                             .whenComplete(
@@ -110,10 +110,11 @@ class _WordPageState extends State<WordPage> {
                                     ),
                                     onPressed: () {
                                       showCupertinoModalBottomSheet(
-                                          context: context,
-                                          builder: (context) => AddWordPage(
-                                                word: word ?? widget.word,
-                                              ));
+                                        context: context,
+                                        builder: (context) => AddWordPage(
+                                          word: word,
+                                        ),
+                                      );
                                     },
                                   ),
                                 )
@@ -126,20 +127,22 @@ class _WordPageState extends State<WordPage> {
                         crossAxisCount: 1,
                         mainAxisSpacing: 14,
                         children: [
-                          Visibility(
-                            visible:
-                                widget.word.type != Word.altro ? true : false,
+                          Padding(
+                            padding: Global.padding,
                             child: Text(
-                              widget.word.type! == Word.sostantivo
-                                  ? widget.word.type! +
+                              word.type! == Word.sostantivo
+                                  ? word.type! +
                                       ", " +
-                                      widget.word.gender! +
+                                      word.gender! +
                                       ", " +
-                                      widget.word.multeplicity!
-                                  : widget.word.type!,
+                                      word.multeplicity!
+                                  : word.type! == Word.altro
+                                      ? Global.capitalize(word.tipology!)
+                                      : word.type!,
                               style: const TextStyle(
-                                  color: CupertinoColors.systemGrey,
-                                  fontStyle: FontStyle.italic),
+                                color: CupertinoColors.systemGrey,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
                           Global.buildNeumorphicTile(
@@ -158,12 +161,12 @@ class _WordPageState extends State<WordPage> {
                                 ),
                                 SizedBox(
                                   width: Global.getSize(context).width,
-                                  height: (widget.word.definitions!.length * 23)
+                                  height: (word.definitions!.length * 23)
                                       .toDouble(),
                                   child: ListView.builder(
                                     padding: const EdgeInsets.all(0),
                                     itemExtent: 23,
-                                    itemCount: widget.word.definitions!.length,
+                                    itemCount: word.definitions!.length,
                                     itemBuilder: (context, index) => Row(
                                       children: [
                                         Text(
@@ -176,8 +179,9 @@ class _WordPageState extends State<WordPage> {
                                         ),
                                         Text(
                                           '"' +
-                                              widget.word.definitions!
-                                                  .elementAt(index) +
+                                              Global.capitalize(widget
+                                                  .word.definitions!
+                                                  .elementAt(index)) +
                                               '"',
                                           style: TextStyle(
                                             color: CupertinoTheme.of(context)
@@ -207,14 +211,12 @@ class _WordPageState extends State<WordPage> {
                                 ),
                                 SizedBox(
                                   width: Global.getSize(context).width,
-                                  height:
-                                      (widget.word.semanticFields!.length * 23)
-                                          .toDouble(),
+                                  height: (word.semanticFields!.length * 23)
+                                      .toDouble(),
                                   child: ListView.builder(
                                     padding: const EdgeInsets.all(0),
                                     itemExtent: 23,
-                                    itemCount:
-                                        widget.word.semanticFields!.length,
+                                    itemCount: word.semanticFields!.length,
                                     itemBuilder: (context, index) => Row(
                                       children: [
                                         Text(
@@ -226,8 +228,7 @@ class _WordPageState extends State<WordPage> {
                                           ),
                                         ),
                                         Text(
-                                          widget.word.semanticFields!
-                                              .elementAt(index),
+                                          word.semanticFields!.elementAt(index),
                                           style: TextStyle(
                                             color: CupertinoTheme.of(context)
                                                 .primaryContrastingColor,
@@ -241,7 +242,7 @@ class _WordPageState extends State<WordPage> {
                             ),
                           ),
                           Visibility(
-                            visible: widget.word.examplePhrases!.isNotEmpty,
+                            visible: word.examplePhrases!.isNotEmpty,
                             child: Global.buildNeumorphicTile(
                               context,
                               StaggeredGrid.count(
@@ -258,15 +259,12 @@ class _WordPageState extends State<WordPage> {
                                   ),
                                   SizedBox(
                                     width: Global.getSize(context).width,
-                                    height:
-                                        (widget.word.examplePhrases!.length *
-                                                23)
-                                            .toDouble(),
+                                    height: (word.examplePhrases!.length * 23)
+                                        .toDouble(),
                                     child: ListView.builder(
                                       padding: const EdgeInsets.all(0),
                                       itemExtent: 23,
-                                      itemCount:
-                                          widget.word.examplePhrases!.length,
+                                      itemCount: word.examplePhrases!.length,
                                       itemBuilder: (context, index) => Row(
                                         children: [
                                           Text(
@@ -279,7 +277,7 @@ class _WordPageState extends State<WordPage> {
                                           ),
                                           Text(
                                             '"' +
-                                                widget.word.examplePhrases!
+                                                word.examplePhrases!
                                                     .elementAt(index) +
                                                 '"',
                                             style: TextStyle(
@@ -296,8 +294,8 @@ class _WordPageState extends State<WordPage> {
                             ),
                           ),
                           Visibility(
-                            visible: widget.word.synonyms!.isNotEmpty ||
-                                widget.word.antonyms!.isNotEmpty,
+                            visible: word.synonyms!.isNotEmpty ||
+                                word.antonyms!.isNotEmpty,
                             child: Global.buildNeumorphicTile(
                               context,
                               StaggeredGrid.count(
@@ -307,10 +305,9 @@ class _WordPageState extends State<WordPage> {
                                     crossAxisCount: 1,
                                     children: [
                                       Visibility(
-                                        visible:
-                                            widget.word.synonyms!.isNotEmpty
-                                                ? true
-                                                : false,
+                                        visible: word.synonyms!.isNotEmpty
+                                            ? true
+                                            : false,
                                         child: const Text(
                                           "Sinonimi:",
                                           style: TextStyle(
@@ -319,27 +316,24 @@ class _WordPageState extends State<WordPage> {
                                         ),
                                       ),
                                       Visibility(
-                                        visible:
-                                            widget.word.synonyms!.isNotEmpty
-                                                ? true
-                                                : false,
+                                        visible: word.synonyms!.isNotEmpty
+                                            ? true
+                                            : false,
                                         child: SizedBox(
                                           width: Global.getSize(context).width,
-                                          height:
-                                              (widget.word.synonyms!.length *
-                                                      23)
-                                                  .toDouble(),
+                                          height: (word.synonyms!.length * 23)
+                                              .toDouble(),
                                           child: ListView.builder(
                                             padding: const EdgeInsets.all(0),
                                             itemExtent: 23,
-                                            itemCount:
-                                                widget.word.synonyms!.length,
+                                            itemCount: word.synonyms!.length,
                                             itemBuilder: (context, index) =>
                                                 Text(
                                               (index + 1).toString() +
                                                   ". " +
-                                                  widget.word.synonyms!
-                                                      .elementAt(index),
+                                                  Global.capitalize(widget
+                                                      .word.synonyms!
+                                                      .elementAt(index)),
                                             ),
                                           ),
                                         ),
@@ -350,10 +344,9 @@ class _WordPageState extends State<WordPage> {
                                     crossAxisCount: 1,
                                     children: [
                                       Visibility(
-                                        visible:
-                                            widget.word.antonyms!.isNotEmpty
-                                                ? true
-                                                : false,
+                                        visible: word.antonyms!.isNotEmpty
+                                            ? true
+                                            : false,
                                         child: const Text(
                                           "Contrari:",
                                           style: TextStyle(
@@ -362,27 +355,24 @@ class _WordPageState extends State<WordPage> {
                                         ),
                                       ),
                                       Visibility(
-                                        visible:
-                                            widget.word.antonyms!.isNotEmpty
-                                                ? true
-                                                : false,
+                                        visible: word.antonyms!.isNotEmpty
+                                            ? true
+                                            : false,
                                         child: SizedBox(
                                           width: Global.getSize(context).width,
-                                          height:
-                                              (widget.word.antonyms!.length *
-                                                      23)
-                                                  .toDouble(),
+                                          height: (word.antonyms!.length * 23)
+                                              .toDouble(),
                                           child: ListView.builder(
                                             padding: const EdgeInsets.all(0),
                                             itemExtent: 23,
-                                            itemCount:
-                                                widget.word.antonyms!.length,
+                                            itemCount: word.antonyms!.length,
                                             itemBuilder: (context, index) =>
                                                 Text(
                                               (index + 1).toString() +
                                                   ". " +
-                                                  widget.word.antonyms!
-                                                      .elementAt(index),
+                                                  Global.capitalize(widget
+                                                      .word.antonyms!
+                                                      .elementAt(index)),
                                             ),
                                           ),
                                         ),
@@ -394,14 +384,14 @@ class _WordPageState extends State<WordPage> {
                             ),
                           ),
                           Visibility(
-                            visible: widget.word.italianType == Word.letteratura
+                            visible: word.italianType == Word.letteratura
                                 ? true
                                 : false,
                             child: Global.buildCupertinoTextWithTitle(
                                 context,
                                 "Corrispondenza italiano moderno",
-                                widget.word.italianCorrespondence != null
-                                    ? widget.word.italianCorrespondence!
+                                word.italianCorrespondence != null
+                                    ? word.italianCorrespondence!
                                     : ""),
                           ),
                         ],

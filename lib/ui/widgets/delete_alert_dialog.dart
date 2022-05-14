@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/repository/firestore_repo.dart';
 import 'package:app_word/ui/widgets/loading_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,7 +8,7 @@ import 'package:flutter/cupertino.dart';
 class DeleteAlertDialog extends StatefulWidget {
   final String title;
   final String text;
-  final List<String> words;
+  final List<Word> words;
   final String rubrica;
   const DeleteAlertDialog(this.title, this.text, this.words, this.rubrica,
       {Key? key})

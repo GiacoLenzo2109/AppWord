@@ -1,8 +1,9 @@
 import 'dart:developer';
+import 'package:app_word/database/entity/word.dart';
 import 'package:flutter/widgets.dart';
 
 class WordBookModel extends ChangeNotifier {
-  get words => _words;
+  Map<String, bool> get words => _words;
 
   final Map<String, bool> _words = {};
 
@@ -11,33 +12,34 @@ class WordBookModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  get clickedWords => _clickedWords;
+  List<Word> get clickedWords => _clickedWords;
 
-  final List<String> _clickedWords = [];
+  final List<Word> _clickedWords = [];
 
-  void addWord(String word) {
-    _words.putIfAbsent(word, () => false);
+  void addWord(Word word) {
+    _words.putIfAbsent(word.id!, () => false);
     notifyListeners();
   }
 
-  bool isClicked(String word) {
-    return _words[word]!;
+  bool isClicked(Word word) {
+    return _words[word.id]!;
   }
 
-  void click(String word) {
-    _words.update(word, ((value) => !_words[word]!));
-    if (_words[word]!) {
+  void click(Word word) {
+    if (!isClicked(word)) {
       _clickedWords.add(word);
     } else {
-      _clickedWords.remove(word);
+      _clickedWords.removeWhere((element) => element.id == word.id);
     }
+    _words.update(word.id!, ((value) => !_words[word.id]!));
     notifyListeners();
   }
 
   void resetAll() {
-    for (var word in _words.entries) {
-      if (_words[word.key]!) click(word.key);
-      notifyListeners();
+    for (var element in _words.keys) {
+      _words[element] = false;
     }
+    _clickedWords.clear();
+    notifyListeners();
   }
 }

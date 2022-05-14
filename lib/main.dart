@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
               ),
         },
         debugShowCheckedModeBanner: false,
-        theme: SchedulerBinding.instance!.window.platformBrightness ==
+        theme: SchedulerBinding.instance.window.platformBrightness ==
                 Brightness.light
             ? ThemeClass.lightThemeCupertino
             : ThemeClass.darkThemeCupertino,

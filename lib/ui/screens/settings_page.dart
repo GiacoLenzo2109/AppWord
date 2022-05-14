@@ -23,7 +23,7 @@ class SettingsPage extends StatelessWidget {
     return StaggeredGrid.count(
       crossAxisCount: 1,
       children: [
-        const SizedBox(height: 65),
+        SizedBox(height: Global.getSize(context).height / 10),
         ElevatedButton(
           style: ButtonStyle(
             shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -38,14 +38,15 @@ class SettingsPage extends StatelessWidget {
           onPressed: () {
             signOut();
           },
-          child: const Text(
-            "Logout",
-            style: TextStyle(fontWeight: FontWeight.bold),
+          child: const Padding(
+            padding: Global.padding,
+            child: Text(
+              "Logout",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
-        SizedBox(
-          height: Global.getSize(context).height - 225,
-        ),
+        SizedBox(height: Global.getSize(context).height / 12),
         StaggeredGrid.count(
           crossAxisCount: 1,
           children: const [

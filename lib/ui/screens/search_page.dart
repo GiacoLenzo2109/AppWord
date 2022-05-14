@@ -35,7 +35,7 @@ class _SearchPageState extends State<SearchPage> {
     return StaggeredGrid.count(
       crossAxisCount: 1,
       children: [
-        SizedBox(height: MediaQuery.of(context).size.height / 12.5),
+        SizedBox(height: Global.getSize(context).height / 12),
         Stack(
           alignment: AlignmentDirectional.centerEnd,
           children: [
@@ -176,9 +176,9 @@ class _SearchPageState extends State<SearchPage> {
             itemBuilder: (context, index) {
               if (words.isNotEmpty) {
                 WordBookModel wordBookModel = WordBookModel();
-                wordBookModel.addWord(words.values.elementAt(index).word!);
+                wordBookModel.addWord(words.values.elementAt(index));
                 return WordBook(
-                    model, wordBookModel, words.values.elementAt(index));
+                    model, words.values.elementAt(index), wordBookModel);
               }
               return const Text("");
             },

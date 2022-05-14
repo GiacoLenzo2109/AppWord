@@ -13,10 +13,10 @@ import 'package:provider/provider.dart';
 // ignore: must_be_immutable
 class WordBook extends StatefulWidget {
   final NavBarModel model;
-  final WordBookModel wordBookModel;
   Word word;
+  WordBookModel wordBookModel;
 
-  WordBook(this.model, this.wordBookModel, this.word, {Key? key})
+  WordBook(this.model, this.word, this.wordBookModel, {Key? key})
       : super(key: key);
 
   @override
@@ -29,11 +29,11 @@ class _WordBookState extends State<WordBook> {
   @override
   void initState() {
     super.initState();
-    log(widget.word.word.toString());
   }
 
   @override
   Widget build(BuildContext context) {
+    //final wordBookModel = Provider.of<WordBookModel>(context);
     // if (wordBookModel == null) {
     //   check = false;
     //   wordBookModel = WordBookModel();
@@ -48,11 +48,11 @@ class _WordBookState extends State<WordBook> {
             Visibility(
               visible: check && widget.model.isTappedLeading,
               child: GestureDetector(
-                  child: widget.wordBookModel.isClicked(widget.word.word!)
+                  child: widget.wordBookModel.isClicked(widget.word)
                       ? const Icon(CupertinoIcons.check_mark_circled_solid)
                       : const Icon(CupertinoIcons.circle),
                   onTap: () => {
-                        widget.wordBookModel.click(widget.word.word!),
+                        widget.wordBookModel.click(widget.word),
                       }),
             ),
             Expanded(
@@ -69,7 +69,7 @@ class _WordBookState extends State<WordBook> {
                 ),
                 onPressed: () {
                   if (widget.model.isTappedLeading) {
-                    widget.wordBookModel.click(widget.word.word!);
+                    widget.wordBookModel.click(widget.word);
                   } else {
                     Navigator.push(
                         widget.model.context,

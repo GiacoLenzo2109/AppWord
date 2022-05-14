@@ -4,6 +4,7 @@ import 'package:app_word/database/entity/user.dart';
 import 'package:app_word/database/entity/word.dart';
 import 'package:app_word/database/entity/wordbook.dart';
 import 'package:app_word/database/firebase_global.dart';
+import 'package:app_word/res/global.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -159,6 +160,38 @@ class FirestoreRepository {
         .doc()
         .id;
 
+    if (word.definitions != null) {
+      for (int i = 0; i < word.definitions!.length; i++) {
+        word.definitions![i] =
+            Global.capitalize(word.definitions!.elementAt(i));
+      }
+    }
+
+    if (word.semanticFields != null) {
+      for (int i = 0; i < word.semanticFields!.length; i++) {
+        word.semanticFields![i] =
+            Global.capitalize(word.semanticFields!.elementAt(i));
+      }
+    }
+    if (word.examplePhrases != null) {
+      for (int i = 0; i < word.examplePhrases!.length; i++) {
+        word.examplePhrases![i] =
+            Global.capitalize(word.examplePhrases!.elementAt(i));
+      }
+    }
+
+    if (word.synonyms != null) {
+      for (int i = 0; i < word.synonyms!.length; i++) {
+        word.synonyms![i] = Global.capitalize(word.synonyms!.elementAt(i));
+      }
+    }
+
+    if (word.antonyms != null) {
+      for (int i = 0; i < word.antonyms!.length; i++) {
+        word.antonyms![i] = Global.capitalize(word.antonyms!.elementAt(i));
+      }
+    }
+
     return (rubrica == personalWordsBook
             ? FirebaseGlobal.users
             : FirebaseGlobal.wordBooks)
@@ -187,6 +220,38 @@ class FirestoreRepository {
               });
     }
 
+    if (word.definitions != null) {
+      for (int i = 0; i < word.definitions!.length; i++) {
+        word.definitions![i] =
+            Global.capitalize(word.definitions!.elementAt(i));
+      }
+    }
+
+    if (word.semanticFields != null) {
+      for (int i = 0; i < word.semanticFields!.length; i++) {
+        word.semanticFields![i] =
+            Global.capitalize(word.semanticFields!.elementAt(i));
+      }
+    }
+    if (word.examplePhrases != null) {
+      for (int i = 0; i < word.examplePhrases!.length; i++) {
+        word.examplePhrases![i] =
+            Global.capitalize(word.examplePhrases!.elementAt(i));
+      }
+    }
+
+    if (word.synonyms != null) {
+      for (int i = 0; i < word.synonyms!.length; i++) {
+        word.synonyms![i] = Global.capitalize(word.synonyms!.elementAt(i));
+      }
+    }
+
+    if (word.antonyms != null) {
+      for (int i = 0; i < word.antonyms!.length; i++) {
+        word.antonyms![i] = Global.capitalize(word.antonyms!.elementAt(i));
+      }
+    }
+
     return (rubrica == personalWordsBook
             ? FirebaseGlobal.users
             : FirebaseGlobal.wordBooks)
@@ -198,7 +263,7 @@ class FirestoreRepository {
         .catchError((error) => log("Failed to add word: $error"));
   }
 
-  static Future<void> deleteWords(List<String> words, String rubrica) async {
+  static Future<void> deleteWords(List<Word> words, String rubrica) async {
     String idRubrica = "";
 
     if (rubrica == personalWordsBook) {
@@ -223,7 +288,7 @@ class FirestoreRepository {
               : FirebaseGlobal.wordBooks)
           .doc(idRubrica)
           .collection(FirebaseGlobal.words)
-          .doc(word.toLowerCase())
+          .doc(word.id)
           .delete()
           .whenComplete(() => log("3_ Word deleted"));
     }

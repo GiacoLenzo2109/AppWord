@@ -72,7 +72,10 @@ class SearchFilterPage extends StatelessWidget {
                   model.setSearch(true),
                   Navigator.pop(context),
                 },
-              )
+              ),
+              const SizedBox(
+                height: 10,
+              ),
               // StaggeredGrid.count(
               //   crossAxisCount: 2,
               //   crossAxisSpacing: 50,

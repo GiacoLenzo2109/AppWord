@@ -80,15 +80,18 @@ class NavBarModel extends ChangeNotifier {
 
   Function()? _actionTrailing;
   void setActionTrailing(String action,
-      {List<String>? words, String? rubrica, Word? word}) {
+      {List<Word>? words, String? rubrica, Word? word}) {
     switch (action) {
       case AddWordPage.route:
         _actionTrailing = () => {
-              showCupertinoModalBottomSheet(
-                context: context,
-                builder: (context) => const AddWordPage(),
-              ),
-              setTappedTrailing(),
+              if (!isTappedLeading)
+                {
+                  showCupertinoModalBottomSheet(
+                    context: context,
+                    builder: (context) => const AddWordPage(),
+                  ),
+                  setTappedTrailing(),
+                }
             };
         break;
       case "Add":
@@ -102,6 +105,7 @@ class NavBarModel extends ChangeNotifier {
         break;
       case "Delete":
         _actionTrailing = () => {
+              log("WORDS to delete:" + words.toString()),
               if (words != null && words.isNotEmpty)
                 {
                   showCupertinoDialog(
@@ -110,7 +114,7 @@ class NavBarModel extends ChangeNotifier {
                         "Conferma",
                         words.length == 1
                             ? "Sei sicuro di eliminare la parola '" +
-                                Global.capitalize(words.first) +
+                                Global.capitalize(words.first.word!) +
                                 "' dalla rubrica?"
                             : "Sei sicuro di eliminare la parole selezionate dalla rubrica?",
                         words,
@@ -121,11 +125,13 @@ class NavBarModel extends ChangeNotifier {
             };
         break;
       default:
+        _actionTrailing = () => {};
+        break;
     }
     notifyListeners();
   }
 
-  get selectedBook => _selectedBook;
+  String get selectedBook => _selectedBook;
 
   String _selectedBook = FirestoreRepository.personalWordsBook;
 
@@ -139,14 +145,6 @@ class NavBarModel extends ChangeNotifier {
 
   void openWordBook(bool check) {
     _checkWordBook = check;
-    notifyListeners();
-  }
-
-  get selectedWordBook => _selectedWordBook;
-  int _selectedWordBook = 0;
-
-  void setWordBook(int index) {
-    _selectedWordBook = index;
     notifyListeners();
   }
 
